@@ -3,6 +3,9 @@
   "private": true,
   "version": "1.0.0",
   "description": "Root scripts for Prime Store monorepo",
+  "engines": {
+    "node": "18.x"
+  },
   "scripts": {
     "lint": "npm --prefix ./backend run lint && npm --prefix ./frontend run lint",
     "format": "npm --prefix ./backend run format && npm --prefix ./frontend run format"
