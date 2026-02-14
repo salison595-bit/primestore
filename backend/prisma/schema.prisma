@@ -1,0 +1,641 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================================
+// USUÁRIOS E AUTENTICAÇÃO
+// ============================================================================
+
+model User {
+  id                String      @id @default(uuid())
+  name              String
+  email             String      @unique
+  phone             String?
+  password          String
+  role              UserRole    @default(CLIENT)
+  avatar            String?
+  isActive          Boolean     @default(true)
+  emailVerified     Boolean     @default(false)
+  emailVerificationToken String?
+  phoneVerified     Boolean     @default(false)
+  lastLogin         DateTime?
+  
+  // Relacionamentos
+  addresses         Address[]
+  orders            Order[]
+  reviews           Review[]
+  cart              CartItem[]
+  wishlist          Wishlist[]
+  payments          Payment[]
+  
+  // Auditoria
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  deletedAt         DateTime?
+
+  @@index([email])
+  @@index([role])
+}
+
+enum UserRole {
+  CLIENT
+  ADMIN
+  SUPPLIER
+}
+
+// ============================================================================
+// ENDEREÇOS
+// ============================================================================
+
+model Address {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type            AddressType // "billing", "shipping", "both"
+  street          String
+  number          String
+  complement      String?
+  neighborhood    String
+  city            String
+  state           String
+  zipCode         String
+  country         String   @default("BR")
+  
+  isDefault       Boolean   @default(false)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+enum AddressType {
+  BILLING
+  SHIPPING
+  BOTH
+}
+
+// ============================================================================
+// CATEGORIAS E PRODUTOS
+// ============================================================================
+
+model Category {
+  id              String    @id @default(uuid())
+  name            String    @unique
+  slug            String    @unique
+  description     String?
+  icon            String?
+  image           String?
+  isActive        Boolean   @default(true)
+  displayOrder    Int       @default(0)
+  
+  products        Product[]
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([slug])
+}
+
+model Product {
+  id              String    @id @default(uuid())
+  categoryId      String?
+  category        Category? @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  
+  name            String
+  slug            String?   @unique
+  description     String
+  shortDescription String?
+  
+  // Preços
+  price           Float
+  originalPrice   Float?
+  costPrice       Float?    // Para cálculo de lucro (dropshipping)
+  
+  // Estoque e Dropshipping
+  stock           Int
+  lowStockAlert   Int       @default(5)
+  isDropshipping  Boolean   @default(false)
+  
+  // Se for dropshipping
+  supplierId      String?
+  supplier        Supplier? @relation(fields: [supplierId], references: [id])
+  supplierProductId String?  // ID do produto no fornecedor
+  supplierProductCode String?  // SKU do fornecedor
+  
+  // SEO
+  seoTitle        String?
+  seoDescription  String?
+  seoKeywords     String?
+  
+  // Mídia
+  images          ProductImage[]
+  
+  // Status
+  isActive        Boolean   @default(true)
+  featured        Boolean   @default(false)
+  
+  // Relacionamentos
+  orderItems      OrderItem[]
+  reviews         Review[]
+  cartItems       CartItem[]
+  wishlistItems   Wishlist[]
+  
+  // Auditoria
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt @default(now())
+  deletedAt       DateTime?
+
+  @@index([categoryId])
+  @@index([supplierId])
+  @@index([slug])
+  @@index([isActive])
+}
+
+model ProductImage {
+  id              String    @id @default(uuid())
+  productId       String
+  product         Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  imageUrl        String
+  altText         String?
+  displayOrder    Int       @default(0)
+  isPrimary       Boolean   @default(false)
+  
+  createdAt       DateTime  @default(now())
+
+  @@index([productId])
+}
+
+// ============================================================================
+// CARRINHO
+// ============================================================================
+
+model CartItem {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId       String
+  product         Product   @relation(fields: [productId], references: [id], onDelete: Restrict)
+  
+  quantity        Int       @default(1)
+  priceAtAdded    Float     // Preço no momento da adição
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([userId, productId])
+  @@index([userId])
+}
+
+// ============================================================================
+// LISTA DE DESEJOS
+// ============================================================================
+
+model Wishlist {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId       String
+  product         Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  createdAt       DateTime  @default(now())
+
+  @@unique([userId, productId])
+  @@index([userId])
+}
+
+// ============================================================================
+// PEDIDOS
+// ============================================================================
+
+model Order {
+  id              String    @id @default(uuid())
+  orderNumber     String    @unique // Código do pedido (ex: "PRIME-2026-001")
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  
+  // Status
+  status          OrderStatus @default(PENDING)
+  statusHistory   OrderStatusHistory[]
+  
+  // Valores
+  subtotal        Float
+  discountAmount  Float     @default(0)
+  couponId        String?
+  coupon          Coupon?   @relation(fields: [couponId], references: [id])
+  shippingCost    Float
+  taxAmount       Float     @default(0)
+  total           Float
+  
+  // Endereço
+  shippingAddressId String?
+  billingAddressId  String?
+  shippingAddressSnapshot String? // JSON snapshot do endereço
+  
+  // Itens
+  items           OrderItem[]
+  
+  // Pagamento
+  payments        Payment[]
+  paymentStatus   PaymentStatus @default(PENDING)
+  paymentMethod   PaymentMethod?
+  
+  // Rastreamento
+  trackingNumber  String?
+  estimatedDelivery DateTime?
+  
+  // Observações
+  notes           String?
+  adminNotes      String?
+  
+  // Auditoria
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  cancelledAt     DateTime?
+
+  @@index([userId])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([orderNumber])
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  RETURNED
+  REFUNDED
+}
+
+model OrderStatusHistory {
+  id              String    @id @default(uuid())
+  orderId         String
+  order           Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  status          OrderStatus
+  changedBy       String? // ID do admin que mudou
+  notes           String?
+  
+  createdAt       DateTime  @default(now())
+
+  @@index([orderId])
+}
+
+model OrderItem {
+  id              String    @id @default(uuid())
+  orderId         String
+  order           Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId       String
+  product         Product   @relation(fields: [productId], references: [id])
+  
+  quantity        Int
+  priceAtOrder    Float
+  subtotal        Float
+  
+  // Dropshipping
+  supplierStatus  SupplierOrderStatus?
+  
+  createdAt       DateTime  @default(now())
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+enum SupplierOrderStatus {
+  PENDING
+  SENT_TO_SUPPLIER
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+// ============================================================================
+// PAGAMENTOS
+// ============================================================================
+
+model Payment {
+  id              String    @id @default(uuid())
+  orderId         String
+  order           Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  
+  method          PaymentMethod
+  status          PaymentStatus @default(PENDING)
+  amount          Float
+  
+  // Documento de transação
+  transactionId   String?   @unique
+  receiptUrl      String?
+  
+  // Info de cartão (nunca armazenar dados sensíveis reais)
+  cardLastFour    String?
+  cardBrand       String?
+  
+  // Parcelamento
+  installments    Int       @default(1)
+  installmentValue Float?
+  
+  // PIX
+  pixQrCode       String?
+  pixKey          String?
+  
+  // Boleto
+  boletoCode      String?
+  boletoUrl       String?
+  boletonoDueDate DateTime?
+  
+  // Metadata
+  metadata        String?   // JSON com dados adicionais
+  
+  // Auditoria
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  paidAt          DateTime?
+  failedAt        DateTime?
+
+  @@index([orderId])
+  @@index([userId])
+  @@index([status])
+  @@index([transactionId])
+}
+
+enum PaymentMethod {
+  CREDIT_CARD
+  DEBIT_CARD
+  PIX
+  BOLETO
+  WALLET
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  APPROVED
+  DECLINED
+  CANCELLED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+// ============================================================================
+// CUPONS DE DESCONTO
+// ============================================================================
+
+model Coupon {
+  id              String    @id @default(uuid())
+  code            String    @unique
+  
+  // Tipo de desconto
+  type            CouponType // PERCENTAGE ou FIXED
+  value           Float
+  maxDiscount     Float?    // Desconto máximo em valor
+  
+  // Limites
+  minPurchaseAmount Float?
+  maxUses         Int?
+  maxUsesPerUser  Int       @default(1)
+  
+  // Período de validade
+  startDate       DateTime
+  endDate         DateTime
+  
+  // Restrições
+  applicableCategories String? // JSON array de categoryIds
+  applicableProducts String?   // JSON array de productIds
+  
+  // Rastreamento
+  usageCount      Int       @default(0)
+  orders          Order[]
+  
+  // Status
+  isActive        Boolean   @default(true)
+  createdBy       String?
+  
+  // Auditoria
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([code])
+  @@index([isActive])
+  @@index([endDate])
+}
+
+enum CouponType {
+  PERCENTAGE
+  FIXED
+}
+
+// ============================================================================
+// AVALIAÇÕES E REVIEWS
+// ============================================================================
+
+model Review {
+  id              String    @id @default(uuid())
+  productId       String
+  product         Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  rating          Int       // 1-5 estrelas
+  title           String
+  content         String
+  
+  verified        Boolean   @default(false) // Usuário comprou?
+  helpful         Int       @default(0)
+  unhelpful       Int       @default(0)
+  
+  isApproved      Boolean   @default(true)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([productId])
+  @@index([userId])
+}
+
+// ============================================================================
+// FORNECEDORES (DROPSHIPPING)
+// ============================================================================
+
+model Supplier {
+  id              String    @id @default(uuid())
+  name            String    @unique
+  email           String    @unique
+  phone           String?
+  
+  // Dados comerciais
+  cnpj            String?
+  companyName     String?
+  website         String?
+  
+  // Contato
+  contactPerson   String?
+  contactEmail    String?
+  contactPhone    String?
+  
+  // Endereço
+  address         String?
+  city            String?
+  state           String?
+  zipCode         String?
+  
+  // Integração
+  apiKey          String?
+  apiSecret       String?
+  webhookUrl      String?
+  integrationUrl  String?
+  
+  // Dados comerciais
+  paymentTerms    String?   // Ex: "30 dias"
+  minimumOrder    Float?
+  shippingPolicy  String?
+  
+  // Produtos
+  products        Product[]
+  
+  // Comunicação
+  isActive        Boolean   @default(true)
+  lastSync        DateTime?
+  
+  // Auditoria
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([email])
+
+  supplierOrderSyncs SupplierOrderSync[]
+
+}
+
+model SupplierOrderSync {
+  id              String    @id @default(uuid())
+  supplierId      String
+  supplier        Supplier  @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  
+  externalOrderId String
+  externalStatus  String
+  
+  // Nossa ordem
+  orderId         String
+  
+  // Logs
+  lastSyncAt      DateTime
+  syncStatus      String
+  errorMessage    String?
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([supplierId])
+  @@index([externalOrderId])
+}
+
+// ============================================================================
+// CONFIGURAÇÕES E TAXA
+// ============================================================================
+
+model StoreSettings {
+  id              String    @id @default(uuid())
+  
+  // Dados da loja
+  storeName       String
+  storeEmail      String
+  storePhone      String?
+  storeWebsite    String?
+  
+  // SEO
+  seoTitle        String?
+  seoDescription  String?
+  seoKeywords     String?
+  
+  // Taxas
+  defaultTaxRate  Float     @default(0)
+  shippingBase    Float     @default(0)
+  shippingPerKm   Float?
+  freeShippingMin Float?
+  
+  // Banners
+  bannerImages    String?   // JSON array com imagens
+  featuredProducts String?  // JSON array de product IDs
+  
+  // Redes sociais
+  instagram       String?
+  facebook        String?
+  tiktok          String?
+  whatsapp        String?
+  
+  // Políticas
+  privacyPolicy   String?
+  termsOfService  String?
+  returnPolicy    String?
+  
+  // Outros
+  maintenanceMode Boolean   @default(false)
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+// ============================================================================
+// LOGS E AUDITORIA
+// ============================================================================
+
+model AuditLog {
+  id              String    @id @default(uuid())
+  userId          String?
+  action          String    // Ex: "PRODUCT_CREATED", "ORDER_UPDATE"
+  entityType      String    // Ex: "Product", "Order"
+  entityId        String
+  oldValues       String?   // JSON
+  newValues       String?   // JSON
+  ipAddress       String?
+  userAgent       String?
+  
+  createdAt       DateTime  @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([entityType])
+}
+
+// ============================================================================
+// WEBHOOKS
+// ============================================================================
+
+model WebhookEvent {
+  id              String    @id @default(uuid())
+  
+  // Identificação
+  externalId      String    @unique  // ID externo (Mercado Pago, Stripe, etc)
+  provider        String    // "MERCADO_PAGO", "STRIPE", etc
+  type            String    // "payment", "payment_intent", "merchant_order", etc
+  
+  // Dados
+  payload         String?   // JSON com dados completos do evento
+  result          String?   // JSON com resultado do processamento
+  error           String?   // Mensagem de erro se falhou
+  
+  // Status
+  status          String    @default("PROCESSING")  // PROCESSING, COMPLETED, FAILED
+  
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  processedAt     DateTime?
+  failedAt        DateTime?
+  
+  @@index([externalId])
+  @@index([provider])
+  @@index([status])
+  @@index([createdAt])
+}
