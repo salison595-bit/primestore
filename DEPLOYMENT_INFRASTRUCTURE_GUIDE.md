@@ -21,7 +21,7 @@ git push -u origin main
 # Set environment variables em Project Settings
 
 NEXT_PUBLIC_API_URL=https://seu-backend.com
-NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY=YOUR_MP_KEY
+NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY=APP_USR-bb96a93d-9fae-4a23-8de8-7e4d3744a4ad
 ```
 
 **Backend (Node.js) - Deploy em Railway/Heroku**
