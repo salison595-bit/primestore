@@ -9,6 +9,7 @@ import paymentRoutes from './payments.js';
 import webhookRoutes from './webhooks.js';
 import adminRoutes from './admin.js';
 import supplierRoutes from './suppliers.js';
+import emailRoutes from './email.js';
 // TODO: Importar outras rotas conforme forem criadas
 // import userRoutes from './users.js';
 // import productRoutes from './products.js';
@@ -45,6 +46,11 @@ router.use('/admin', adminRoutes);
  * Registra rotas de fornecedores (dropshipping)
  */
 router.use('/suppliers', supplierRoutes);
+
+/**
+ * Registra rotas de email e notificações
+ */
+router.use('/email', emailRoutes);
 
 /**
  * Placeholder para outras rotas

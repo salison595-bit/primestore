@@ -6,6 +6,7 @@
 
 import crypto from 'crypto';
 import PaymentService from '../services/paymentService.js';
+import emailService from '../services/emailService.js';
 import { logger } from '../utils/logger.js';
 import { AppError } from '../utils/errors.js';
 import prisma from '../config/database.js';
@@ -188,6 +189,40 @@ export class WebhookController {
             notes: 'Pagamento aprovado via Mercado Pago',
           },
         });
+
+        // 📧 Enviar email de confirmação ao cliente
+        const customer = await prisma.customer.findUnique({
+          where: { id: payment.order.customerId },
+        });
+
+        if (customer) {
+          const orderData = {
+            id: payment.order.id,
+            total: payment.amount,
+            paymentMethod: 'Mercado Pago',
+            items: payment.order.items || [],
+            createdAt: payment.order.createdAt,
+          };
+
+          await emailService.sendOrderConfirmation(orderData, customer);
+
+          logger.info('📧 Email de confirmação enviado', {
+            customerId: customer.id,
+            email: customer.email,
+          });
+        }
+
+        // 📧 Enviar notificação para admin
+        await emailService.sendAdminNotification(
+          {
+            id: payment.order.id,
+            customerName: customer?.name || 'Cliente',
+            customerEmail: customer?.email || 'unknown',
+            total: payment.amount,
+            createdAt: payment.order.createdAt,
+          },
+          'payment-approved'
+        );
 
         logger.info('✅ Pedido confirmado após pagamento', {
           orderId: payment.orderId,
