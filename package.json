@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Root scripts for Prime Store monorepo",
   "engines": {
-    "node": "20.x"
+    "node": "22.x"
   },
   "scripts": {
     "start": "cd backend && npm start",
