@@ -247,7 +247,7 @@ app.use(errorHandler);
 // INICIALIZAÇÃO DO SERVIDOR
 // ============================================================================
 
-const PORT = config.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 
 const startServer = async () => {
   try {
