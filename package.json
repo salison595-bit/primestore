@@ -7,6 +7,8 @@
     "node": "18.x"
   },
   "scripts": {
+    "start": "cd backend && npm start",
+    "postinstall": "cd backend && npm install",
     "lint": "npm --prefix ./backend run lint && npm --prefix ./frontend run lint",
     "format": "npm --prefix ./backend run format && npm --prefix ./frontend run format"
   },
