@@ -1,0 +1,42 @@
+# Prime Store Robots Configuration
+# Generated: 2026-02-14
+
+User-agent: *
+Allow: /
+Allow: /produtos
+Allow: /produto/
+Allow: /checkout
+Allow: /success
+
+# Disallow admin areas
+Disallow: /admin
+Disallow: /_next/
+Disallow: /private/
+Disallow: /api/
+
+# Crawl delay
+Crawl-delay: 1
+
+# Sitemap
+Sitemap: https://primestore.com/sitemap.xml
+Sitemap: https://primestore.com/products-sitemap.xml
+
+# Specific bot rules
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: AdsBot-Google
+Allow: /
+
+# Bad bots
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /

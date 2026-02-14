@@ -1,5 +1,2 @@
-[00:00:23.758] Server  LOG     ✓ Ready in 21.9s
-[06:37:39.081] Server  ERROR   ⨯ Error: ENOENT: no such file or directory, open 'Z:\trae projeto\Prime Store\prime-store\frontend\.next\dev\server\app\page\build-manifest.json'
-[06:37:42.113] Server  LOG     ○ Compiling /_error ...
-[06:44:13.261] Server  ERROR   ⨯ Error: ENOENT: no such file or directory, open 'Z:\trae projeto\Prime Store\prime-store\frontend\.next\dev\server\app\page\build-manifest.json'
-[09:09:39.840] Server  ERROR   ⨯ Error: ENOENT: no such file or directory, open 'Z:\trae projeto\Prime Store\prime-store\frontend\.next\dev\server\app\page\build-manifest.json'
+[00:00:03.225] Server  WARN    ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+[00:00:03.809] Server  LOG     ✓ Ready in 2.6s
