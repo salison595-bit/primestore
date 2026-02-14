@@ -31,8 +31,7 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
-    "@prisma/adapter-pg": "^7.3.0",
-    "@prisma/client": "^7.3.0",
+    "@prisma/client": "^5.22.0",
     "aws-sdk": "^1.18.0",
     "axios": "^1.6.0",
     "bcryptjs": "^3.0.3",
@@ -43,7 +42,7 @@
     "mercadopago": "^2.12.0",
     "nodemailer": "^8.0.1",
     "pg": "^8.18.0",
-    "prisma": "^6.19.2",
+    "prisma": "^5.22.0",
     "stripe": "^13.5.0",
     "uuid": "^9.0.1",
     "zod": "^3.22.4"
