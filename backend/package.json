@@ -6,6 +6,7 @@
   "scripts": {
     "build": "prisma generate",
     "start": "prisma migrate deploy && node server.js",
+    "postinstall": "prisma generate",
     "dev": "node --watch server.js",
     "lint": "eslint .",
     "format": "prettier --write .",
