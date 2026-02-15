@@ -7,8 +7,10 @@
     { "src": "/(.*)", "dest": "/frontend/$1" }
   ],
   "env": {
-    "API_KEY": "seu_valor_aqui",
-    "NEXT_PUBLIC_ANALYTICS_ID": "seu_valor_aqui"
+    "NEXT_PUBLIC_API_URL": "https://seu-backend.railway.app",
+    "NEXT_PUBLIC_FRONT_URL": "https://seu-app.vercel.app",
+    "NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY": "seu_public_key_mercado_pago",
+    "NEXT_PUBLIC_ENV": "development"
   },
   "functions": {
     "frontend/api/**/*.js": { "memory": 1024, "maxDuration": 10 }
