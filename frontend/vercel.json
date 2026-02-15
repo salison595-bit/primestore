@@ -1,18 +1,9 @@
 {
   "version": 2,
-  "builds": [
-    { "src": "package.json", "use": "@vercel/next" }
-  ],
-  "routes": [
-    { "src": "/(.*)", "dest": "/$1" }
-  ],
   "env": {
     "NEXT_PUBLIC_API_URL": "http://localhost:5000/api",
     "NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY": "seu_public_key_mercado_pago",
     "NODE_ENV": "development",
     "NEXT_PUBLIC_ENV": "development"
-  },
-  "functions": {
-    "api/**/*.js": { "memory": 1024, "maxDuration": 10 }
   }
 }
