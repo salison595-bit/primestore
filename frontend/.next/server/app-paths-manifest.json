@@ -1,10 +1,10 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
   "/(auth)/login/page": "app/(auth)/login/page.js",
-  "/(auth)/register/page": "app/(auth)/register/page.js",
   "/admin/page": "app/admin/page.js",
-  "/error/page": "app/error/page.js",
   "/checkout/page": "app/checkout/page.js",
+  "/(auth)/register/page": "app/(auth)/register/page.js",
+  "/error/page": "app/error/page.js",
   "/page": "app/page.js",
   "/product/[id]/page": "app/product/[id]/page.js",
   "/produtos/page": "app/produtos/page.js",
