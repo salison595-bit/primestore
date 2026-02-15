@@ -1,23 +1,6 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #1a1a1a;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #d4af37;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #f0d550;
-}
-
-/* Selection color */
 ::selection {
   background-color: #d4af37;
   color: #000;
