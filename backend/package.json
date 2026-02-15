@@ -5,14 +5,15 @@
   "main": "server.js",
   "scripts": {
     "build": "prisma generate",
-    "start": "prisma migrate deploy && node server.js",
+    "start": "npm run db:deploy && node server.js",
     "postinstall": "prisma generate",
     "dev": "node --watch server.js",
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "jest",
     "migrate": "prisma migrate dev",
-    "migrate:prod": "prisma migrate deploy",
+    "migrate:prod": "npx prisma migrate deploy",
+    "db:deploy": "npx prisma migrate deploy",
     "generate": "prisma generate",
     "seed": "prisma db seed"
   },
