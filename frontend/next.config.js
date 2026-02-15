@@ -1,10 +1,25 @@
 /** @type {import('next').NextConfig} */
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const nextConfig = {
   // Performance optimizations
   reactStrictMode: true,
   swcMinify: true,
   compress: true,
   poweredByHeader: false,
+
+  // Webpack configuration for path aliases
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': `${__dirname}`,
+    };
+    return config;
+  },
 
   // Image optimization
   images: {
