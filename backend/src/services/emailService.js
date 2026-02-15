@@ -3,8 +3,8 @@
  * File: backend/src/services/emailService.js
  */
 
-const nodemailer = require('nodemailer');
-const logger = require('../utils/logger');
+import nodemailer from 'nodemailer';
+import { logger } from '../utils/logger.js';
 
 // Configurar transporter
 const createTransporter = () => {
@@ -356,4 +356,4 @@ class EmailService {
   }
 }
 
-module.exports = new EmailService();
+export default new EmailService();
