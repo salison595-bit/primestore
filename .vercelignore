@@ -1,0 +1,22 @@
+# Git
+.git
+.gitignore
+
+# Dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Testing
+.next/
+out/
+coverage/
+
+# Backend (não precisa no Vercel)
+backend/
+.env.local
+.env
+
+# Documentation
+README.md
+*.md
