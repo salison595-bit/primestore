@@ -8,8 +8,6 @@ const __dirname = path.dirname(__filename);
 const nextConfig = {
   // Performance optimizations
   reactStrictMode: true,
-  swcMinify: true,
-  compress: true,
   poweredByHeader: false,
 
   // Webpack configuration for path aliases
@@ -92,16 +90,6 @@ const nextConfig = {
         },
       ],
     };
-  },
-
-  // ESLint
-  eslint: {
-    ignoreDuringBuilds: false,
-  },
-
-  // TypeScript
-  typescript: {
-    tsconfigPath: './tsconfig.json',
   },
 
   // Experimental features
