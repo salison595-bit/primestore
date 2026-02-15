@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "npx prisma migrate deploy && node server.js",
+    "postinstall": "npx prisma generate",
     "dev": "node --watch server.js"
   },
   "prisma": {
