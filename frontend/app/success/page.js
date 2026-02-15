@@ -1,10 +1,15 @@
 'use client';
 
+
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { useMemo } from 'react';
 
 export default function SuccessPage() {
+  const orderNumber = useMemo(() => {
+    return Math.random().toString(36).substring(2, 11).toUpperCase();
+  }, []);
   return (
     <div className="bg-black text-white min-h-screen flex flex-col">
       <Header />
@@ -32,7 +37,7 @@ export default function SuccessPage() {
               <div>
                 <p className="text-sm text-gray-400 mb-1">Número do Pedido</p>
                 <p className="text-yellow-600 font-mono font-bold">
-                  #{Math.random().toString(36).substr(2, 9).toUpperCase()}
+                  #{orderNumber}
                 </p>
               </div>
               <div className="border-t border-gray-800 pt-4">
