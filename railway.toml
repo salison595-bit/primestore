@@ -1,9 +1,2 @@
 [build]
 builder = "nixpacks"
-
-[build.nixpacks]
-# Instala dependências da raiz E do backend
-cmd = "npm ci && cd backend && npm ci && npx prisma generate"
-
-[deploy]
-startCommand = "cd backend && npm start"
