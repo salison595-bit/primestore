@@ -7,8 +7,10 @@
     "dev": "node --watch server.js"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^5.22.0",
     "@prisma/client": "^5.22.0",
     "express": "^4.18.2",
+    "pg": "^8.11.0",
     "prisma": "^5.22.0",
     "aws-sdk": "^1.18.0",
     "axios": "^1.6.0",
@@ -18,7 +20,6 @@
     "jsonwebtoken": "^9.0.3",
     "mercadopago": "^2.12.0",
     "nodemailer": "^8.0.1",
-    "pg": "^8.18.0",
     "stripe": "^13.5.0",
     "uuid": "^9.0.1",
     "zod": "^3.22.4"
