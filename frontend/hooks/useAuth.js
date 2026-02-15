@@ -1,21 +1,40 @@
-'use client'
+'use client';
 
-/**
- * Hook useAuth
- * Fornece acesso fácil ao contexto de autenticação
- */
+import { useState, useEffect } from 'react';
 
-import { useContext } from 'react';
-import AuthContext from '../context/AuthContext';
+export default function useAuth() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-export function useAuth() {
-  const context = useContext(AuthContext);
+  useEffect(() => {
+    // Verificar se há usuário no localStorage
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+    setLoading(false);
+  }, []);
 
-  if (!context) {
-    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
-  }
+  const login = async (credentials) => {
+    // Implementação básica de exemplo
+    const mockUser = { id: 1, email: credentials.email, name: 'Usuário' };
+    setUser(mockUser);
+    localStorage.setItem('user', JSON.stringify(mockUser));
+    return mockUser;
+  };
 
-  return context;
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('user');
+  };
+
+  const register = async (userData) => {
+    // Implementação básica de exemplo
+    const mockUser = { id: 1, email: userData.email, name: userData.name };
+    setUser(mockUser);
+    localStorage.setItem('user', JSON.stringify(mockUser));
+    return mockUser;
+  };
+
+  return { user, loading, login, logout, register };
 }
-
-export default useAuth;
