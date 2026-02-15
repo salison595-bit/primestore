@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Header from '@/components/Header';
-import Hero from '@/components/Hero';
-import FeaturedSection from '@/components/FeaturedSection';
-import Footer from '@/components/Footer';
-import CartSidebar from '@/components/CartSidebar';
+import Header from '../components/Header';
+import Hero from '../components/Hero';
+import FeaturedSection from '../components/FeaturedSection';
+import Footer from '../components/Footer';
+import CartSidebar from '../components/CartSidebar';
 
 export default function Home() {
   const [isCartOpen, setIsCartOpen] = useState(false);
