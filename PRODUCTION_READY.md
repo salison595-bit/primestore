@@ -35,12 +35,14 @@
 
 ### **2️⃣ Deploy Frontend no Vercel (5 minutos)**
 
+> **Nota:** O arquivo `vercel.json` agora está em `frontend/vercel.json`. Sempre use Root Directory = `./frontend` no painel do Vercel.
+
 ```bash
 1. Acesse https://vercel.com
 2. Login com GitHub
 3. "Add New Project" → "Import Git Repository"
 4. Selecione: salison595-bit/primestore
-5. Root Directory: ./frontend (importante!)
+5. Root Directory: ./frontend (IMPORTANTE!)
 6. Vercel detecta Next.js automaticamente ✅
 7. Configure variável: NEXT_PUBLIC_API_URL = https://seu-backend.railway.app
 8. Deploy automático! 🎉
@@ -101,7 +103,7 @@ PRIME STORE
 | `DEPLOYMENT.md` | Visão geral de ambas plataformas | Raiz |
 | `VERCEL_DEPLOYMENT_GUIDE.md` | Guia detalhado Vercel | Raiz |
 | `RAILWAY_DEPLOYMENT_GUIDE.md` | Guia detalhado Railway | Raiz |
-| `vercel.json` | Config Vercel (build, env vars) | Raiz |
+| `frontend/vercel.json` | Config Vercel (build, env vars) | frontend/ |
 | `.vercelignore` | Ignora backend em deploy | Raiz |
 | `.env.example` | Documenta variáveis necessárias | Raiz |
 | `.gitignore` | Ignora build files e .env | Raiz |
