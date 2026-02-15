@@ -4,18 +4,8 @@
   "description": "PRIME STORE - E-commerce API Backend profissional e escalável",
   "main": "server.js",
   "scripts": {
-    "build": "prisma generate",
-    "start": "npm run db:deploy && node server.js",
-    "postinstall": "prisma generate",
-    "dev": "node --watch server.js",
-    "lint": "eslint .",
-    "format": "prettier --write .",
-    "test": "jest",
-    "migrate": "prisma migrate dev",
-    "migrate:prod": "npx prisma migrate deploy",
-    "db:deploy": "npx prisma migrate deploy",
-    "generate": "prisma generate",
-    "seed": "prisma db seed"
+    "start": "npx prisma migrate deploy && node server.js",
+    "dev": "node --watch server.js"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
