@@ -15,6 +15,5 @@
     }
   },
   "regions": ["sfo1"],
-  "memory": 1024,
   "maxDuration": 60
 }
