@@ -1,19 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('overview');
-  const [stats, setStats] = useState({
+  const [stats] = useState({
     totalOrders: 156,
     totalRevenue: 45890.50,
     totalProducts: 24,
     todayOrders: 12,
   });
-  const [products, setProducts] = useState([
+  const [products] = useState([
     {
       id: '1',
       name: 'PRIME ESSENTIALS TEE',
@@ -37,7 +36,7 @@ export default function AdminPage() {
     },
   ]);
 
-  const [orders, setOrders] = useState([
+  const [orders] = useState([
     {
       id: '#12345',
       customer: 'João Silva',

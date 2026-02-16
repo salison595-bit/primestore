@@ -6,6 +6,8 @@
 
 ## **📦 Deploy Frontend no Vercel**
 
+> **Nota:** O arquivo `vercel.json` agora está em `frontend/vercel.json`. Sempre use Root Directory = `./frontend` no painel do Vercel.
+
 ### **1️⃣ Criar Conta no Vercel**
 - Acesse: https://vercel.com
 - Clique em "Sign Up"
@@ -16,9 +18,9 @@
 2. Selecione repositório `salison595-bit/primestore`
 3. Configure:
    - **Framework**: Next.js (detectado automaticamente)
-   - **Root Directory**: `./` (deixar padrão)
-   - **Build Command**: `cd frontend && npm run build`
-   - **Output Directory**: `frontend/.next`
+   - **Root Directory**: `./frontend` (IMPORTANTE)
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `.next`
 
 ### **3️⃣ Configurar Variáveis de Ambiente**
 No painel do Vercel, adicione:
@@ -57,7 +59,6 @@ Adicione no painel do Railway:
 ```
 NODE_ENV=production
 JWT_SECRET=sua_chave_super_secreta
-MP_ACCESS_TOKEN=seu_token_mercado_pago
 MERCADO_PAGO_WEBHOOK_SECRET=seu_webhook_secret
 FRONT_URL=https://seu-app.vercel.app
 EMAIL_HOST=smtp-relay.brevo.com

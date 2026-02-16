@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '@/services/api';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
@@ -23,16 +23,7 @@ const CouponsManager = () => {
     validUntil: '',
   });
 
-  useEffect(() => {
-    if (user?.role !== 'ADMIN' && user?.role !== 'SUPERADMIN') {
-      router.push('/');
-      return;
-    }
-
-    fetchCoupons();
-  }, [user, router]);
-
-  const fetchCoupons = async () => {
+  const fetchCoupons = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -43,7 +34,16 @@ const CouponsManager = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (user?.role !== 'ADMIN' && user?.role !== 'SUPERADMIN') {
+      router.push('/');
+      return;
+    }
+
+    fetchCoupons();
+  }, [user, router, fetchCoupons]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

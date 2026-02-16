@@ -19,7 +19,7 @@
   - [x] Seed/migrations pronting (backend/prisma/migrations)
 
 - [x] **Configuração Vercel**
-  - [x] vercel.json criado com build command
+  - [x] frontend/vercel.json criado com build command
   - [x] .vercelignore criado para ignorar backend
   - [x] Build command testado localmente
   - [x] Environment variables documentadas
@@ -129,7 +129,7 @@ NEXT_PUBLIC_API_URL = https://seu-backend.railway.app
 NEXT_PUBLIC_FRONT_URL = https://seu-app.vercel.app
 ```
 
-**Nota:** Use localhost:5000 temporariamente se e tiver testando com backend local
+**Nota:** O arquivo `vercel.json` agora está em `frontend/vercel.json`. Use sempre Root Directory = `./frontend` no painel do Vercel. Use localhost:5000 temporariamente se estiver testando com backend local.
 
 ### Passo 5: Deploy
 - [ ] Clique botão azul "Deploy" 🎉

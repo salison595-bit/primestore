@@ -6,12 +6,9 @@ export default function SuccessPage() {
   const [orderNumber, setOrderNumber] = useState("")
 
   useEffect(() => {
-    const generated = Math.random()
-      .toString(36)
-      .substring(2, 11)
-      .toUpperCase()
-
-    setOrderNumber(generated)
+    const generated = Math.random().toString(36).substring(2, 11).toUpperCase()
+    const numero = generated
+    setOrderNumber(numero)
   }, [])
 
   return (

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '@/services/api';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
@@ -25,16 +25,7 @@ const OrdersManager = () => {
     'RETURNED',
   ];
 
-  useEffect(() => {
-    if (user?.role !== 'ADMIN' && user?.role !== 'SUPERADMIN') {
-      router.push('/');
-      return;
-    }
-
-    fetchOrders();
-  }, [user, page, statusFilter, router]);
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -50,7 +41,16 @@ const OrdersManager = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, statusFilter]);
+
+  useEffect(() => {
+    if (user?.role !== 'ADMIN' && user?.role !== 'SUPERADMIN') {
+      router.push('/');
+      return;
+    }
+
+    fetchOrders();
+  }, [user, router, fetchOrders]);
 
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {

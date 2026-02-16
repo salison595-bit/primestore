@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '@/services/api';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
@@ -16,16 +16,7 @@ const ProductsManager = () => {
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState({});
 
-  useEffect(() => {
-    if (user?.role !== 'ADMIN' && user?.role !== 'SUPERADMIN') {
-      router.push('/');
-      return;
-    }
-
-    fetchProducts();
-  }, [user, page, search, router]);
-
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -41,7 +32,16 @@ const ProductsManager = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, search]);
+
+  useEffect(() => {
+    if (user?.role !== 'ADMIN' && user?.role !== 'SUPERADMIN') {
+      router.push('/');
+      return;
+    }
+
+    fetchProducts();
+  }, [user, router, fetchProducts]);
 
   const handleEditStart = (product) => {
     setEditingId(product.id);

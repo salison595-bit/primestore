@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '@/services/api';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
@@ -30,16 +30,7 @@ const SuppliersManager = () => {
     apiKey: '',
   });
 
-  useEffect(() => {
-    if (user?.role !== 'ADMIN' && user?.role !== 'SUPERADMIN') {
-      router.push('/');
-      return;
-    }
-
-    fetchSuppliers();
-  }, [user, page, router]);
-
-  const fetchSuppliers = async () => {
+  const fetchSuppliers = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -54,7 +45,16 @@ const SuppliersManager = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page]);
+
+  useEffect(() => {
+    if (user?.role !== 'ADMIN' && user?.role !== 'SUPERADMIN') {
+      router.push('/');
+      return;
+    }
+
+    fetchSuppliers();
+  }, [user, router, fetchSuppliers]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

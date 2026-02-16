@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '@/services/api';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
@@ -13,16 +13,7 @@ const DashboardContent = () => {
   const [error, setError] = useState(null);
   const [days, setDays] = useState(30);
 
-  useEffect(() => {
-    if (user?.role !== 'ADMIN' && user?.role !== 'SUPERADMIN') {
-      router.push('/');
-      return;
-    }
-
-    fetchDashboard();
-  }, [user, days, router]);
-
-  const fetchDashboard = async () => {
+  const fetchDashboard = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -33,7 +24,16 @@ const DashboardContent = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [days]);
+
+  useEffect(() => {
+    if (user?.role !== 'ADMIN' && user?.role !== 'SUPERADMIN') {
+      router.push('/');
+      return;
+    }
+
+    fetchDashboard();
+  }, [user, router, fetchDashboard]);
 
   if (loading) {
     return <div className="p-8 text-center">Carregando dashboard...</div>;

@@ -40,7 +40,7 @@ Na tela de configuração, mude:
 
 ```
 ✏️ Framework Preset: Next.js
-✏️ Root Directory: ./frontend
+✏️ Root Directory: ./frontend (IMPORTANTE)
 ✏️ Build Command: npm run build
 ✏️ Install Command: npm install
 ✏️ Output Directory: .next
@@ -70,6 +70,7 @@ Clique botão azul "Deploy" e aguarde 2-5 minutos ✨
 ```
 prime-store/
 ├── frontend/                 ← Vercel procura aqui com Root Directory
+│   ├── vercel.json           ← ✅ Agora está aqui!
 │   ├── package.json         ← npm install aqui
 │   ├── next.config.js       ← Configuração Next.js
 │   ├── tsconfig.json        ← TypeScript config
@@ -79,30 +80,24 @@ prime-store/
 │   ├── public/              ← Static files
 │   └── ...
 ├── backend/                 ← .vercelignore ignora isso
-├── vercel.json             ← ✅ Já criado!
 ├── .vercelignore           ← ✅ Já criado!
 └── README.md
 ```
 
 ### **Arquivo: vercel.json (Já Criado)**
 
+O arquivo `vercel.json` agora está em `frontend/vercel.json`.
+
 ```json
 {
-  "buildCommand": "cd frontend && npm install && npm run build",
-  "outputDirectory": "frontend/.next",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
   "framework": "nextjs",
-  "projectSettings": {
-    "buildCommand": "npm run build",
-    "outputDirectory": ".next",
-    "nodeVersion": "20.x"
-  },
-  "env": {
-    "NEXT_PUBLIC_API_URL": "@next_public_api_url"
-  },
-  "builds": [
+  "env": [
     {
-      "src": "frontend/package.json",
-      "use": "@vercel/next"
+      "key": "NEXT_PUBLIC_API_URL",
+      "description": "URL da API do backend",
+      "value": "https://seu-backend.railway.app"
     }
   ]
 }
