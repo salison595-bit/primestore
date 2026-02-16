@@ -10,6 +10,7 @@ import webhookRoutes from './webhooks.js';
 import adminRoutes from './admin.js';
 import supplierRoutes from './suppliers.js';
 import emailRoutes from './email.js';
+import productRoutes from './products.js';
 // TODO: Importar outras rotas conforme forem criadas
 // import userRoutes from './users.js';
 // import productRoutes from './products.js';
@@ -57,7 +58,7 @@ router.use('/email', emailRoutes);
  * TODO: Descomentar e implementar conforme necessário
  */
 // router.use('/users', userRoutes);
-// router.use('/products', productRoutes);
+router.use('/products', productRoutes);
 // router.use('/orders', orderRoutes);
 // router.use('/cart', cartRoutes);
 // router.use('/coupons', couponRoutes);
