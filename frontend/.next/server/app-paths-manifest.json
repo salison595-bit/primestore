@@ -1,13 +1,1 @@
-{
-  "/_not-found/page": "app/_not-found/page.js",
-  "/(auth)/login/page": "app/(auth)/login/page.js",
-  "/page": "app/page.js",
-  "/(auth)/register/page": "app/(auth)/register/page.js",
-  "/product/[id]/page": "app/product/[id]/page.js",
-  "/checkout/page": "app/checkout/page.js",
-  "/success/page": "app/success/page.js",
-  "/error/page": "app/error/page.js",
-  "/produto/[id]/page": "app/produto/[id]/page.js",
-  "/admin/page": "app/admin/page.js",
-  "/produtos/page": "app/produtos/page.js"
-}
+{}
