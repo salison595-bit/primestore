@@ -75,9 +75,6 @@ export default function RootLayout({ children }) {
   return (
     <html lang="pt-BR" className={inter.variable}>
       <head>
-        {/* Preload critical assets */}
-        <link rel="preload" as="font" href="/fonts/inter.woff2" type="font/woff2" />
-        
         {/* DNS Prefetch */}
         <link rel="dns-prefetch" href="https://api.primestore.com" />
         
