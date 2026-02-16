@@ -11,7 +11,7 @@ const mockProduct = {
   id: '1',
   name: 'PRIME ESSENTIALS TEE',
   price: 129.90,
-  image: '/img/product-1.jpg',
+  image: 'https://images.unsplash.com/photo-1520975731300-1425cd5017e4',
   description: 'Camiseta premium em algodão 100% puro',
   category: 'Camisetas',
   rating: 4.8,
@@ -117,7 +117,7 @@ export default function ProdutoPage({ params }) {
           <div className="bg-gray-900 border border-gray-800 rounded p-8">
             <div className="relative w-full h-96">
               <Image
-                src={product?.image || '/img/placeholder.jpg'}
+                src={product?.image || 'https://picsum.photos/800/600'}
                 alt={product?.name}
                 fill
                 className="object-cover rounded"

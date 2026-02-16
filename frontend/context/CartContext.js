@@ -55,7 +55,7 @@ export function CartProvider({ children }) {
           id: product.id,
           name: product.name,
           price: product.price,
-          image: product.images?.[0]?.imageUrl || '/placeholder.jpg',
+          image: product.images?.[0]?.imageUrl || 'https://picsum.photos/400/400',
           quantity,
           product
         }

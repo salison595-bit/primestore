@@ -25,21 +25,21 @@ export default function FeaturedSection() {
             name: 'Fone Premium Wireless',
             price: 199.90,
             description: 'Som cristalino com tecnologia de cancelamento ativo',
-            image: '/images/fone.jpg',
+            image: 'https://images.unsplash.com/photo-1518443872270-2d7f3b99956f',
           },
           {
             id: 2,
             name: 'Tênis Exclusivo Streetwear',
             price: 299.90,
             description: 'Design limitado, conforto máximo',
-            image: '/images/tenis.jpg',
+            image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff',
           },
           {
             id: 3,
             name: 'Relógio Smart Premium',
             price: 349.90,
             description: 'Tecnologia e estilo em um único acessório',
-            image: '/images/relogio.jpg',
+            image: 'https://images.unsplash.com/photo-1516557070067-84e0a7d344bb',
           },
         ]);
       } finally {
