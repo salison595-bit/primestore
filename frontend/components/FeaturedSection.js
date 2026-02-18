@@ -10,38 +10,23 @@ export default function FeaturedSection() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        // Buscar produtos da API
-        const response = await fetch('/api/produtos?limit=3');
+        const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333/api';
+        const response = await fetch(`${API}/products?page=1&limit=3`);
         if (response.ok) {
           const data = await response.json();
-          setProducts(data.data || data);
+          const base = new URL(API).origin;
+          const items = (data.data || []).map((p) => ({
+            id: p.id,
+            name: p.name,
+            price: p.price,
+            image: `${base}/api/assets/image?url=${encodeURIComponent(p.imageUrl)}`,
+            description: p.description,
+          }));
+          setProducts(items);
         }
       } catch (error) {
         console.error('Erro ao buscar produtos:', error);
-        // Usar dados mock se API falhar
-        setProducts([
-          {
-            id: 1,
-            name: 'Fone Premium Wireless',
-            price: 199.90,
-            description: 'Som cristalino com tecnologia de cancelamento ativo',
-            image: 'https://images.unsplash.com/photo-1518443872270-2d7f3b99956f',
-          },
-          {
-            id: 2,
-            name: 'Tênis Exclusivo Streetwear',
-            price: 299.90,
-            description: 'Design limitado, conforto máximo',
-            image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff',
-          },
-          {
-            id: 3,
-            name: 'Relógio Smart Premium',
-            price: 349.90,
-            description: 'Tecnologia e estilo em um único acessório',
-            image: 'https://images.unsplash.com/photo-1516557070067-84e0a7d344bb',
-          },
-        ]);
+        setProducts([]);
       } finally {
         setLoading(false);
       }
