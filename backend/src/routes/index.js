@@ -11,6 +11,7 @@ import adminRoutes from './admin.js';
 import supplierRoutes from './suppliers.js';
 import emailRoutes from './email.js';
 import productRoutes from './products.js';
+import assetsRoutes from './assets.js';
 // TODO: Importar outras rotas conforme forem criadas
 // import userRoutes from './users.js';
 // import productRoutes from './products.js';
@@ -22,6 +23,18 @@ import productRoutes from './products.js';
 // import reviewRoutes from './reviews.js';
 
 const router = express.Router();
+
+/**
+ * Healthcheck
+ */
+router.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+/**
+ * Assets
+ */
+router.use('/assets', assetsRoutes);
 
 /**
  * Registra rotas de autenticação

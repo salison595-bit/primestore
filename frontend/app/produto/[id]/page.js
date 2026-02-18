@@ -7,36 +7,6 @@ import { useCart } from '@/hooks/useCart';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
-const mockProduct = {
-  id: '1',
-  name: 'PRIME ESSENTIALS TEE',
-  price: 129.90,
-  image: 'https://images.unsplash.com/photo-1520975731300-1425cd5017e4',
-  description: 'Camiseta premium em algodão 100% puro',
-  category: 'Camisetas',
-  rating: 4.8,
-  reviews: 127,
-  inStock: true,
-  sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-  colors: ['Preto', 'Branco', 'Cinza'],
-  fullDescription: `
-    A PRIME ESSENTIALS TEE é a camiseta perfeita para quem busca qualidade e estilo.
-    
-    CARACTERÍSTICAS:
-    • Algodão 100% puro, ultra macio
-    • Costura reforçada nas mangas
-    • Gola redonda clássica
-    • Fit moderna e confortável
-    • Durável e resistente
-    
-    CUIDADOS:
-    • Lavar com água fria
-    • Não usar alvejante
-    • Secar ao natural
-    • Passar a média temperatura
-  `,
-};
-
 export default function ProdutoPage({ params }) {
   const { addItem } = useCart();
   const [product, setProduct] = useState(null);
@@ -49,12 +19,26 @@ export default function ProdutoPage({ params }) {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const response = await fetch(`/api/produtos/${params.id}`);
+        const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333/api';
+        const response = await fetch(`${API}/products/${params.id}`);
         const data = await response.json();
-        setProduct(data.data || mockProduct);
+        const p = data.data;
+        if (p) {
+          const base = new URL(API).origin;
+          setProduct({
+            id: p.id,
+            name: p.name,
+            price: p.price,
+            image: `${base}/assets/image?url=${encodeURIComponent(p.imageUrl)}`,
+            description: p.description,
+            category: p.category,
+          });
+        } else {
+          setProduct(null);
+        }
       } catch (error) {
         console.error('Erro ao buscar produto:', error);
-        setProduct(mockProduct);
+        setProduct(null);
       } finally {
         setLoading(false);
       }
@@ -117,7 +101,7 @@ export default function ProdutoPage({ params }) {
           <div className="bg-gray-900 border border-gray-800 rounded p-8">
             <div className="relative w-full h-96">
               <Image
-                src={product?.image || 'https://picsum.photos/800/600'}
+                src={product?.image || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff'}
                 alt={product?.name}
                 fill
                 className="object-cover rounded"

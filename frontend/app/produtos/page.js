@@ -7,56 +7,14 @@ import { useCart } from '@/hooks/useCart';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
-const mockProducts = [
-  {
-    id: '1',
-    name: 'PRIME ESSENTIALS TEE',
-    price: 129.90,
-    image: 'https://images.unsplash.com/photo-1520975731300-1425cd5017e4',
-    description: 'Camiseta premium em algodão premium',
-    category: 'Camisetas',
-  },
-  {
-    id: '2',
-    name: 'PRIME TECH HOODIE',
-    price: 249.90,
-    image: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246',
-    description: 'Moleton tecnológico com clima control',
-    category: 'Hoodies',
-  },
-  {
-    id: '3',
-    name: 'PRIME SNEAKER',
-    price: 399.90,
-    image: 'https://images.unsplash.com/photo-1600180758890-6b94519a8c79',
-    description: 'Sneaker premium com solado premium',
-    category: 'Calçados',
-  },
-  {
-    id: '4',
-    name: 'PRIME CAP',
-    price: 89.90,
-    image: 'https://images.unsplash.com/photo-1533855215257-0f345a4d2ca2',
-    description: 'Boné ajustável premium',
-    category: 'Acessórios',
-  },
-  {
-    id: '5',
-    name: 'PRIME JACKET',
-    price: 449.90,
-    image: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f',
-    description: 'Jaqueta premium com forro térmico',
-    category: 'Jaquetas',
-  },
-  {
-    id: '6',
-    name: 'PRIME TRACK PANTS',
-    price: 189.90,
-    image: 'https://images.unsplash.com/photo-1592878849123-4271b40f3c42',
-    description: 'Calça premium streetwear',
-    category: 'Calças',
-  },
-];
+const mapCategoryName = (slugOrName) => {
+  const s = (slugOrName || '').toLowerCase();
+  if (s.includes('camiseta')) return 'Camisetas';
+  if (s.includes('eletron')) return 'Eletrônicos';
+  if (s.includes('acessor')) return 'Acessórios';
+  if (s.includes('calça') || s.includes('calcado') || s.includes('calçado')) return 'Calçados';
+  return 'Premium';
+};
 
 export default function ProdutosPage() {
   const [products, setProducts] = useState([]);
@@ -67,12 +25,22 @@ export default function ProdutosPage() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch('/api/produtos');
+        const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333/api';
+        const response = await fetch(`${API}/products?page=1&limit=24`);
         const data = await response.json();
-        setProducts(data.data || mockProducts);
+        const base = new URL(API).origin;
+        const items = (data.data || []).map((p) => ({
+          id: p.id,
+          name: p.name,
+          price: p.price,
+          image: `${base}/assets/image?url=${encodeURIComponent(p.imageUrl)}`,
+          description: p.description,
+          category: mapCategoryName(p.category),
+        }));
+        setProducts(items);
       } catch (error) {
         console.error('Erro ao buscar produtos:', error);
-        setProducts(mockProducts);
+        setProducts([]);
       } finally {
         setLoading(false);
       }
