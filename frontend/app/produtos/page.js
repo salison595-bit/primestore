@@ -33,7 +33,7 @@ export default function ProdutosPage() {
           id: p.id,
           name: p.name,
           price: p.price,
-          image: `${base}/assets/image?url=${encodeURIComponent(p.imageUrl)}`,
+          image: `${base}/api/assets/image?url=${encodeURIComponent(p.imageUrl)}`,
           description: p.description,
           category: mapCategoryName(p.category),
         }));
