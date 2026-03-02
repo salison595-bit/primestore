@@ -4,69 +4,64 @@ import Link from 'next/link';
 
 export default function Hero() {
   return (
-    <section className="relative min-h-screen bg-black pt-20 flex items-center justify-center overflow-hidden">
-      {/* Background gradient effect */}
-      <div className="absolute inset-0 bg-gradient-to-b from-yellow-600/5 via-black to-black"></div>
-
-      {/* Grid background pattern */}
-      <div className="absolute inset-0 opacity-5">
-        <div
-          className="w-full h-full"
-          style={{
-            backgroundImage: `linear-gradient(0deg, transparent 24%, rgba(212, 175, 55, .05) 25%, rgba(212, 175, 55, .05) 26%, transparent 27%, transparent 74%, rgba(212, 175, 55, .05) 75%, rgba(212, 175, 55, .05) 76%, transparent 77%, transparent),
-                            linear-gradient(90deg, transparent 24%, rgba(212, 175, 55, .05) 25%, rgba(212, 175, 55, .05) 26%, transparent 27%, transparent 74%, rgba(212, 175, 55, .05) 75%, rgba(212, 175, 55, .05) 76%, transparent 77%, transparent)`,
-            backgroundSize: '50px 50px',
-          }}
-        ></div>
-      </div>
-
-      {/* Glowing orb background */}
-      <div className="absolute top-1/2 right-0 w-96 h-96 bg-yellow-600/10 rounded-full filter blur-3xl opacity-20"></div>
-
-      {/* Content */}
-      <div className="relative z-10 max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-        {/* Main heading */}
-        <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6 tracking-tight">
-          <span className="text-white">ELEVE SEU</span>
-          <br />
-          <span className="text-yellow-600">NÍVEL COM A PRIME</span>
-        </h1>
-
-        {/* Subtitle */}
-        <p className="text-gray-400 text-lg sm:text-xl mb-8 max-w-2xl mx-auto leading-relaxed">
-          Produtos premium com qualidade absoluta. Tecnologia, moda e estilo reunidos em um único lugar.
-        </p>
-
-        {/* CTA Button */}
-        <Link
-          href="/produtos"
-          className="inline-block bg-yellow-600 hover:bg-yellow-500 text-black font-bold py-4 px-8 uppercase tracking-widest transition-all duration-300 transform hover:scale-105 active:scale-95"
-        >
-          VER PRODUTOS
-        </Link>
-
-        {/* Decorative line */}
-        <div className="mt-12 flex justify-center">
-          <div className="h-1 w-16 bg-gradient-to-r from-transparent via-yellow-600 to-transparent"></div>
+    <section className="px-6 md:px-12 lg:px-16 pt-32 pb-12 font-manrope">
+      <div className="relative overflow-hidden rounded-[48px] bg-[#050505] min-h-[600px] flex items-center p-8 md:p-20 border border-white/5 group shadow-2xl">
+        {/* Background Image with Parallax-like effect */}
+        <div className="absolute inset-0 z-0">
+          <img
+            alt="Luxury automotive detail"
+            className="h-full w-full object-cover opacity-30 group-hover:scale-105 transition-transform duration-10000"
+            src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=2070&auto=format&fit=crop"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#050505] via-[#050505]/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent opacity-80" />
         </div>
-      </div>
 
-      {/* Scroll indicator */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
-        <div className="animate-bounce">
-          <svg
-            className="w-6 h-6 text-yellow-600"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 14l-7 7m0 0l-7-7m7 7V3"
-            />
-          </svg>
+        {/* Decorative elements */}
+        <div className="absolute top-[-10%] right-[-5%] w-[40%] h-[40%] bg-[#d4af37]/10 rounded-full blur-[120px] pointer-events-none" />
+
+        {/* Content */}
+        <div className="relative z-10 max-w-4xl">
+          <span className="text-[#d4af37] text-[10px] font-bold tracking-[0.6em] uppercase mb-6 block animate-in fade-in slide-in-from-left duration-700">
+            A DEFINIÇÃO DE EXCLUSIVIDADE
+          </span>
+          <h1 className="text-5xl md:text-7xl font-light leading-tight tracking-tight uppercase mb-10 animate-in fade-in slide-in-from-left duration-1000 text-white">
+            ELEVE SEU ESTILO AO <span className="text-[#d4af37] font-medium block md:inline">NÍVEL PRIME</span>
+          </h1>
+          <p className="text-gray-400 text-sm md:text-base max-w-xl mb-12 font-light leading-relaxed uppercase tracking-widest animate-in fade-in slide-in-from-left duration-1200">
+            Curadoria rigorosa de itens premium e serviços de alta performance para quem exige o extraordinário.
+          </p>
+          <div className="flex flex-wrap items-center gap-6 animate-in fade-in slide-in-from-bottom duration-1000">
+            <Link
+              href="/produtos"
+              className="bg-[#d4af37] hover:bg-[#b8962d] text-[#050505] font-bold py-5 px-12 rounded-2xl text-[10px] tracking-[0.3em] uppercase transition-all shadow-[0_20px_40px_rgba(212,175,55,0.2)] active:scale-95 group/btn overflow-hidden relative"
+            >
+              <span className="relative z-10">VER CATÁLOGO</span>
+              <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000" />
+            </Link>
+            <Link
+              href="/produtos?categoria=novidades"
+              className="bg-white/5 border border-white/10 hover:border-[#d4af37]/50 hover:bg-white/10 text-white font-bold py-5 px-12 rounded-2xl text-[10px] tracking-[0.3em] uppercase transition-all backdrop-blur-md active:scale-95"
+            >
+              NOVIDADES
+            </Link>
+          </div>
+        </div>
+
+        {/* Bottom indicators */}
+        <div className="absolute bottom-12 left-20 hidden md:flex items-center gap-8 text-[8px] font-bold tracking-[0.4em] text-gray-500 uppercase">
+          <div className="flex items-center gap-3">
+            <span className="w-8 h-px bg-[#d4af37]" />
+            <span>EXCLUSIVO</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="w-8 h-px bg-white/10" />
+            <span>PREMIUM</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="w-8 h-px bg-white/10" />
+            <span>PERFORMANCE</span>
+          </div>
         </div>
       </div>
     </section>

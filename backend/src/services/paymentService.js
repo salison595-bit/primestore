@@ -5,6 +5,7 @@
 
 import prisma from '../config/database.js';
 import { MercadoPagoConfig, Preference, Payment } from 'mercadopago';
+import Stripe from 'stripe';
 import { config } from '../config/env.js';
 import { createLogger } from '../utils/logger.js';
 import {
@@ -71,6 +72,51 @@ export class PaymentService {
     } catch (error) {
       logger.error('Erro ao criar preferência de pagamento', error);
       throw new PaymentError('Erro ao criar preferência de pagamento');
+    }
+  }
+
+  /**
+   * Cria sessão de Checkout no Stripe
+   * @param {Object} data - { orderId, items, total, email, customerName }
+   * @returns {Promise<Object>} - { url, sessionId }
+   */
+  static async createStripeCheckoutSession(data) {
+    try {
+      const { orderId, items, total, email, customerName } = data;
+      if (!config.STRIPE_SECRET_KEY) {
+        throw new PaymentError('Stripe não configurado');
+      }
+      if (/replace/i.test(config.STRIPE_SECRET_KEY)) {
+        const url = `${config.FRONT_URL}/mock/stripe-session?order=${orderId}`;
+        const sessionId = `cs_mock_${String(orderId)}`;
+        logger.info('Sessão de checkout Stripe mock', { orderId, sessionId, total });
+        return { url, sessionId };
+      }
+      const stripe = new Stripe(config.STRIPE_SECRET_KEY);
+      const lineItems = items.map(item => ({
+        price_data: {
+          currency: 'brl',
+          product_data: {
+            name: item.product?.name || item.name,
+          },
+          unit_amount: Math.round((item.priceAtOrder ?? item.price) * 100),
+        },
+        quantity: item.quantity,
+      }));
+      const session = await stripe.checkout.sessions.create({
+        mode: 'payment',
+        customer_email: email,
+        client_reference_id: String(orderId),
+        metadata: { orderId: String(orderId), customerName: customerName || '' },
+        line_items: lineItems,
+        success_url: `${config.FRONT_URL}/success?order=${orderId}`,
+        cancel_url: `${config.FRONT_URL}/error?order=${orderId}`,
+      });
+      logger.info('Sessão de checkout Stripe criada', { orderId, sessionId: session.id, total });
+      return { url: session.url, sessionId: session.id };
+    } catch (error) {
+      logger.error('Erro ao criar sessão de checkout Stripe', error);
+      throw new PaymentError('Erro ao criar sessão de checkout Stripe');
     }
   }
 

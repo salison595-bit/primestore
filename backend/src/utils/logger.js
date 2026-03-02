@@ -6,6 +6,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import axios from 'axios';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -33,7 +34,13 @@ if (!fs.existsSync(logsDir)) {
 class Logger {
   constructor(module) {
     this.module = module;
-    this.level = LOG_LEVELS[process.env.LOG_LEVEL || 'INFO'];
+    const defaultLevel = (process.env.NODE_ENV === 'production') ? 'INFO' : 'DEBUG';
+    const envLevel = process.env.LOG_LEVEL || defaultLevel;
+    this.level = LOG_LEVELS[envLevel];
+    this.webhookUrl = process.env.LOG_WEBHOOK_URL || '';
+    this.sampleRate = parseFloat(process.env.LOG_WEBHOOK_SAMPLE_RATE || '1');
+    this.forceWebhook = (process.env.FORCE_LOG_WEBHOOK || 'false') === 'true';
+    this.minWebhookLevel = LOG_LEVELS[(process.env.LOG_WEBHOOK_MIN_LEVEL || 'INFO')];
   }
 
   format(level, message, data = null) {
@@ -52,6 +59,9 @@ class Logger {
       
       // Escrever em arquivo
       this.writeToFile(formatted);
+
+      // Enviar para webhook externo (centralização)
+      this.sendToWebhook(level, message, data);
     }
   }
 
@@ -62,6 +72,30 @@ class Logger {
     fs.appendFile(logFile, message + '\n', (err) => {
       if (err) console.error('Erro ao escrever log:', err);
     });
+  }
+
+  shouldSend(level) {
+    if (!this.webhookUrl) return false;
+    const envOk = (process.env.NODE_ENV === 'production') || this.forceWebhook;
+    if (!envOk) return false;
+    if (LOG_LEVELS[level] < this.minWebhookLevel) return false;
+    if (isNaN(this.sampleRate) || this.sampleRate <= 0) return false;
+    if (this.sampleRate >= 1) return true;
+    return Math.random() < this.sampleRate;
+  }
+
+  async sendToWebhook(level, message, data) {
+    try {
+      if (!this.shouldSend(level)) return;
+      const payload = {
+        level,
+        module: this.module,
+        message,
+        data,
+        timestamp: new Date().toISOString()
+      };
+      await axios.post(this.webhookUrl, payload);
+    } catch {}
   }
 
   debug(message, data) {

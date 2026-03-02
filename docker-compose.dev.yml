@@ -1,0 +1,34 @@
+# Prime Store - Desenvolvimento Local
+# Use: docker-compose -f docker-compose.dev.yml up -d
+# Sobe apenas PostgreSQL e Redis para desenvolvimento com .env local
+# DATABASE_URL=postgresql://primestore:dev_password@localhost:5432/primestore_dev
+# REDIS_URL=redis://localhost:6379
+
+version: "3.9"
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: primestore
+      POSTGRES_PASSWORD: dev_password
+      POSTGRES_DB: primestore_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U primestore"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+volumes:
+  postgres_dev_data:

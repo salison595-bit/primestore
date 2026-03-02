@@ -188,20 +188,59 @@ class AdminService {
    */
   async updateProduct(productId, data) {
     try {
+      const pricingByCategory = {
+        'camisetas': 0.40,
+        'eletronicos': 0.25,
+        'acessorios': 0.50,
+        'calcados': 0.35,
+      };
+
+      const psychologicalRound = (value) => {
+        if (value < 50) return 59.90;
+        const rounded = Math.ceil(value / 10) * 10 - 0.10;
+        return parseFloat(rounded.toFixed(2));
+      };
+
+      const computeFinalPrice = (supplierPrice = 0, shippingCost = 0, margin = 0.30) => {
+        let effectiveMargin = margin;
+        const base = (supplierPrice + shippingCost);
+        let computed = base * (1 + effectiveMargin);
+        if (computed > 300) {
+          effectiveMargin = Math.max(effectiveMargin - 0.05, 0);
+          computed = base * (1 + effectiveMargin);
+        }
+        return psychologicalRound(computed);
+      };
+
       const product = await prisma.product.findUnique({
         where: { id: productId },
+        include: { category: true },
       });
 
       if (!product) {
         throw new NotFoundError('Produto não encontrado');
       }
 
+      // Determinar margem
+      let margin = data.marginPercent ?? product.marginPercent;
+      if (margin === null || margin === undefined) {
+        const cat = data.categoryId
+          ? await prisma.category.findUnique({ where: { id: data.categoryId } })
+          : product.category;
+        margin = cat?.defaultMargin ?? pricingByCategory[(cat?.slug || '').toLowerCase()] ?? 0.30;
+      }
+
+      // Calcular preço final
+      const supplierPrice = data.supplierPrice ?? product.supplierPrice ?? product.costPrice ?? product.price;
+      const shippingCost = data.shippingCost ?? product.shippingCost ?? 0;
+      const finalPrice = computeFinalPrice(supplierPrice, shippingCost, margin);
+
       const updated = await prisma.product.update({
         where: { id: productId },
         data: {
           name: data.name || product.name,
           description: data.description || product.description,
-          price: data.price !== undefined ? data.price : product.price,
+          price: data.price !== undefined ? data.price : finalPrice,
           originalPrice:
             data.originalPrice !== undefined
               ? data.originalPrice
@@ -213,6 +252,19 @@ class AdminService {
           featured:
             data.featured !== undefined ? data.featured : product.featured,
           categoryId: data.categoryId || product.categoryId,
+          // Dropshipping & pricing fields
+          supplierPrice,
+          marginPercent: margin,
+          finalPrice,
+          shippingCost,
+          supplierStock: data.supplierStock ?? product.supplierStock,
+          primaryImage: data.primaryImage ?? product.primaryImage,
+          extraImages: data.extraImages ?? product.extraImages,
+          supplierName: data.supplierName ?? product.supplierName,
+          supplierLink: data.supplierLink ?? product.supplierLink,
+          promotionalPrice: data.promotionalPrice ?? product.promotionalPrice,
+          discountPercent: data.discountPercent ?? product.discountPercent,
+          promotionEndDate: data.promotionEndDate ?? product.promotionEndDate,
         },
         include: {
           category: { select: { id: true, name: true } },

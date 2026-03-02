@@ -6,59 +6,9 @@ import Footer from '@/components/Footer';
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('overview');
-  const [stats] = useState({
-    totalOrders: 156,
-    totalRevenue: 45890.50,
-    totalProducts: 24,
-    todayOrders: 12,
-  });
-  const [products] = useState([
-    {
-      id: '1',
-      name: 'PRIME ESSENTIALS TEE',
-      price: 129.90,
-      stock: 45,
-      sales: 234,
-    },
-    {
-      id: '2',
-      name: 'PRIME TECH HOODIE',
-      price: 249.90,
-      stock: 23,
-      sales: 156,
-    },
-    {
-      id: '3',
-      name: 'PRIME SNEAKER',
-      price: 399.90,
-      stock: 12,
-      sales: 89,
-    },
-  ]);
-
-  const [orders] = useState([
-    {
-      id: '#12345',
-      customer: 'João Silva',
-      total: 345.90,
-      status: 'Delivered',
-      date: '2026-02-13',
-    },
-    {
-      id: '#12344',
-      customer: 'Maria Santos',
-      total: 245.50,
-      status: 'Processing',
-      date: '2026-02-14',
-    },
-    {
-      id: '#12343',
-      customer: 'Pedro Costa',
-      total: 129.90,
-      status: 'Shipped',
-      date: '2026-02-14',
-    },
-  ]);
+  const [stats] = useState(undefined);
+  const [products] = useState([]);
+  const [orders] = useState([]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -115,24 +65,22 @@ export default function AdminPage() {
               {[
                 {
                   label: 'Pedidos Totais',
-                  value: stats.totalOrders,
+                  value: stats?.totalOrders ?? '—',
                   color: 'text-blue-600',
                 },
                 {
                   label: 'Faturamento',
-                  value: `R$ ${stats.totalRevenue.toLocaleString('pt-BR', {
-                    minimumFractionDigits: 2,
-                  })}`,
+                  value: stats?.totalRevenue != null ? `R$ ${Number(stats.totalRevenue).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '—',
                   color: 'text-green-600',
                 },
                 {
                   label: 'Produtos',
-                  value: stats.totalProducts,
+                  value: stats?.totalProducts ?? '—',
                   color: 'text-yellow-600',
                 },
                 {
                   label: 'Pedidos Hoje',
-                  value: stats.todayOrders,
+                  value: stats?.todayOrders ?? '—',
                   color: 'text-purple-600',
                 },
               ].map((stat, i) => (

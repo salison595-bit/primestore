@@ -4,8 +4,17 @@
  */
 
 import { createLogger } from '../utils/logger.js';
+import axios from 'axios';
 
 const logger = createLogger('RequestLogger');
+const shouldSend = () => {
+  if (!process.env.LOG_WEBHOOK_URL) return false;
+  if (!(process.env.NODE_ENV === 'production' || process.env.FORCE_LOG_WEBHOOK === 'true')) return false;
+  const rate = parseFloat(process.env.LOG_WEBHOOK_SAMPLE_RATE || '1');
+  if (isNaN(rate) || rate <= 0) return false;
+  if (rate >= 1) return true;
+  return Math.random() < rate;
+};
 
 export const requestLogger = (req, res, next) => {
   const startTime = Date.now();
@@ -40,6 +49,16 @@ export const requestLogger = (req, res, next) => {
         error: data?.error?.message
       });
     }
+
+    try {
+      if (shouldSend()) {
+        const payload = {
+          ...logData,
+          timestamp: new Date().toISOString()
+        };
+        axios.post(process.env.LOG_WEBHOOK_URL, payload).catch(() => {});
+      }
+    } catch {}
 
     // Chama o método original
     return originalJson.call(this, data);

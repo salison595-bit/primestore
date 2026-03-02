@@ -46,6 +46,86 @@ class EmailService {
   }
 
   /**
+   * Enviar email de atualização de frete
+   */
+  async sendShippingUpdate(order, customer, event) {
+    const statusLabels = {
+      'SHIPPED': 'Saiu para entrega 🚚',
+      'DELIVERED': 'Entregue com sucesso! ✅',
+      'PROCESSING': 'Em trânsito 📦',
+      'CONFIRMED': 'Objeto postado 📮',
+      'PENDING': 'Aguardando atualização ⏳'
+    };
+
+    const label = statusLabels[order.status] || 'Atualização no seu pedido';
+
+    const htmlContent = `
+      <html>
+        <head>
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 20px auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
+            .header { background: #111827; color: #fbbf24; padding: 30px; text-align: center; }
+            .content { padding: 30px; background: #ffffff; }
+            .status-badge { display: inline-block; padding: 6px 12px; border-radius: 9999px; background: #fef3c7; color: #92400e; font-weight: bold; font-size: 14px; margin-bottom: 20px; }
+            .update-box { background: #f9fafb; border-left: 4px solid #fbbf24; padding: 20px; margin: 20px 0; border-radius: 4px; }
+            .order-info { font-size: 14px; color: #6b7280; margin-bottom: 30px; border-top: 1px solid #eee; pt: 20px; }
+            .button { background: #fbbf24; color: #000; padding: 14px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold; margin-top: 10px; }
+            .footer { background: #f3f4f6; padding: 20px; text-align: center; font-size: 12px; color: #9ca3af; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1 style="margin:0; font-size: 24px;">PRIME STORE</h1>
+              <p style="margin:5px 0 0 0; opacity: 0.8;">Atualização de entrega</p>
+            </div>
+            
+            <div class="content">
+              <div class="status-badge">${label}</div>
+              <p>Olá <strong>${customer.name}</strong>,</p>
+              <p>Temos uma nova atualização sobre a entrega do seu pedido <strong>#${order.orderNumber || order.id}</strong>:</p>
+              
+              <div class="update-box">
+                <p style="margin:0; font-weight: bold; color: #111827;">${event.description}</p>
+                ${event.location ? `<p style="margin:5px 0 0 0; font-size: 13px; color: #6b7280;">📍 ${event.location}</p>` : ''}
+                <p style="margin:10px 0 0 0; font-size: 12px; color: #9ca3af;">Data: ${new Date(event.createdAt).toLocaleString('pt-BR')}</p>
+              </div>
+              
+              <div style="text-align: center; margin: 40px 0;">
+                <a href="${process.env.FRONT_URL}/success?order=${order.id}" class="button">Acompanhar em Tempo Real</a>
+              </div>
+
+              <div class="order-info">
+                <p style="margin: 5px 0;"><strong>Código de Rastreio:</strong> ${order.trackingNumber}</p>
+                <p style="margin: 5px 0;"><strong>Transportadora:</strong> ${order.shippingCarrier || 'Correios'}</p>
+              </div>
+            </div>
+            
+            <div class="footer">
+              <p>© ${new Date().getFullYear()} Prime Store. Todos os direitos reservados.</p>
+              <p>Esta é uma mensagem automática, por favor não responda.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    try {
+      const info = await this.transporter.sendMail({
+        from: `"Prime Store" <${this.fromEmail}>`,
+        to: customer.email,
+        subject: `🚚 Atualização de Entrega: Pedido #${order.orderNumber || order.id}`,
+        html: htmlContent
+      });
+      return info;
+    } catch (error) {
+      console.error('Falha ao enviar e-mail de frete:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Enviar email de confirmação de pedido
    */
   async sendOrderConfirmation(order, customer) {

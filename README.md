@@ -63,6 +63,8 @@ Frontend (Next.js 14)        Backend (Express.js)        Database (PostgreSQL)
 
 ## 🚀 QUICK START
 
+> 💡 **Guia detalhado:** Consulte [LOCAL_SETUP.md](LOCAL_SETUP.md) para rodar com Docker ou manualmente.
+
 ### 1. Clonar Repositório
 ```bash
 git clone https://github.com/seu-repo/prime-store.git

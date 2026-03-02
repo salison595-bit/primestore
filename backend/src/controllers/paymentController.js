@@ -46,6 +46,31 @@ export class PaymentController {
   }
 
   /**
+   * POST /api/payments/stripe/checkout-session
+   * Cria sessão de Checkout do Stripe com metadata.orderId e client_reference_id
+   */
+  static async createStripeCheckoutSession(req, res, next) {
+    try {
+      const userId = req.user.id;
+      const { orderId } = req.body;
+      const order = await OrderService.getOrder(orderId);
+      if (order.userId !== userId) {
+        throw new ValidationError('Acesso negado a este pedido');
+      }
+      const result = await PaymentService.createStripeCheckoutSession({
+        orderId,
+        items: order.items,
+        total: order.total,
+        email: req.user.email,
+        customerName: req.user.name
+      });
+      res.json(FormatterUtil.successResponse(result, 'Sessão de checkout criada'));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * POST /api/payments/process
    * Processa um pagamento
    */
@@ -78,6 +103,54 @@ export class PaymentController {
 
       res.status(201).json(
         FormatterUtil.successResponse(payment, 'Pagamento processado')
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * POST /api/payments/stripe/checkout-session
+   * Cria sessão de checkout do Stripe com metadata.orderId e client_reference_id
+   */
+  static async createStripeCheckoutSession(req, res, next) {
+    try {
+      const userId = req.user.id;
+      const { orderId, items } = req.body;
+      let payload = null;
+      if (orderId) {
+        const order = await OrderService.getOrder(orderId);
+        if (order.userId !== userId) {
+          throw new ValidationError('Acesso negado a este pedido');
+        }
+        payload = {
+          orderId,
+          items: order.items.map(i => ({
+            name: i.product?.name || i.name,
+            quantity: i.quantity,
+            price: i.priceAtOrder ?? i.price
+          })),
+          total: order.total,
+          email: req.user.email,
+          customerName: req.user.name
+        };
+      } else {
+        if (!items || !Array.isArray(items) || items.length === 0) {
+          throw new ValidationError('Itens do carrinho são obrigatórios');
+        }
+        const syntheticOrderId = `dev-${Date.now()}`;
+        const total = items.reduce((sum, it) => sum + (it.price * it.quantity), 0);
+        payload = {
+          orderId: syntheticOrderId,
+          items,
+          total,
+          email: req.user.email,
+          customerName: req.user.name
+        };
+      }
+      const session = await PaymentService.createStripeCheckoutSession(payload);
+      res.status(201).json(
+        FormatterUtil.successResponse(session, 'Sessão de checkout criada')
       );
     } catch (error) {
       next(error);

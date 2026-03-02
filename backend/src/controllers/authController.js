@@ -44,7 +44,8 @@ export class AuthController {
 
       const result = await AuthService.login({
         email,
-        password
+        password,
+        ip: req.ip || req.connection?.remoteAddress
       });
 
       // Retorna tokens em header também (segurança)

@@ -90,141 +90,164 @@ export default function RegisterPage() {
   const strengthColor = strengthColors[passwordStrength.level];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md">
-        <div className="bg-gray-800 rounded-lg p-8 shadow-2xl">
-          <h1 className="text-3xl font-bold text-yellow-400 mb-2 text-center">
-            Prime Store
-          </h1>
-          <p className="text-gray-400 text-center mb-8">Crie sua conta</p>
+    <div className="flex min-h-screen w-full flex-col lg:flex-row bg-background-dark font-display text-slate-100 antialiased overflow-hidden">
+      {/* Esquerda: Hero Visual */}
+      <div className="relative hidden lg:flex lg:w-3/5 xl:w-[65%] overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent to-background-dark z-10"></div>
+        <div className="absolute inset-0 bg-black/40 z-0"></div>
+        <div 
+          className="h-full w-full bg-cover bg-center transition-transform duration-[20000ms] hover:scale-110" 
+          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=2070&auto=format&fit=crop')" }}
+        ></div>
+        <div className="absolute bottom-12 left-12 z-20 max-w-md">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="material-symbols-outlined text-primary text-5xl !fill-1" style={{ fontVariationSettings: "'FILL' 1" }}>crown</span>
+            <h2 className="text-4xl font-extrabold tight-kerning text-white uppercase shimmer-text">PRIME STORE</h2>
+          </div>
+          <p className="text-slate-300 text-lg font-light leading-relaxed">
+            Faça parte do clube mais exclusivo de lifestyle e alta performance.
+          </p>
+        </div>
+      </div>
+
+      {/* Direita: Formulário */}
+      <div className="flex flex-1 flex-col justify-center px-6 py-12 lg:px-16 xl:px-24 bg-background-dark relative overflow-y-auto">
+        <div className="flex items-center gap-2 mb-8 justify-center lg:justify-start">
+          <span className="material-symbols-outlined text-primary text-4xl !fill-1" style={{ fontVariationSettings: "'FILL' 1" }}>crown</span>
+          <h1 className="text-3xl font-extrabold tight-kerning text-primary uppercase shimmer-text">PRIME STORE</h1>
+        </div>
+
+        <div className="w-full max-w-md mx-auto lg:mx-0">
+          <div className="mb-8 text-center lg:text-left">
+            <h2 className="text-4xl font-extrabold tight-kerning text-primary mb-2 uppercase shimmer-text">Cadastro VIP</h2>
+            <p className="text-slate-400 text-base">Inicie sua jornada na excelência.</p>
+          </div>
 
           {(error || formError) && (
-            <div className="bg-red-900/20 border border-red-500 text-red-400 px-4 py-3 rounded mb-6">
+            <div className="bg-red-900/20 border border-red-500 text-red-400 px-4 py-3 rounded-lg mb-6 text-sm flex items-center gap-2 animate-bounce">
+              <span className="material-symbols-outlined text-sm">error</span>
               {error || formError}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
-                Nome Completo
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Seu Nome"
-                className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-yellow-400"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="seu@email.com"
-                className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-yellow-400"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-300 mb-2">
-                Telefone (Opcional)
-              </label>
-              <input
-                type="tel"
-                id="phone"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="(11) 99999-0000"
-                className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-yellow-400"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-                Senha
-              </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="••••••••"
-                className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-yellow-400"
-                required
-              />
-              {formData.password && (
-                <div className="mt-2">
-                  <div className="flex gap-1 mb-1">
-                    {[0, 1, 2, 3, 4].map(i => (
-                      <div
-                        key={i}
-                        className={`h-2 flex-1 rounded ${
-                          i < passwordStrength.level
-                            ? `bg-${strengthColor}-500`
-                            : 'bg-gray-600'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <p className="text-xs text-gray-400">
-                    Força: <span className="text-yellow-400">{passwordStrength.message}</span>
-                  </p>
+          <div className="glass-panel rounded-xl p-8 shadow-2xl">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-primary text-[10px] font-bold uppercase tracking-[0.2em] ml-1">Nome Completo</label>
+                <div className="relative flex items-center rounded-lg border border-primary/20 bg-background-dark/50 transition-all duration-300 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
+                  <span className="material-symbols-outlined ml-4 text-primary/60">person</span>
+                  <input 
+                    name="name"
+                    type="text"
+                    value={formData.name}
+                    onChange={handleChange}
+                    className="w-full border-none bg-transparent py-3 px-4 text-white placeholder:text-slate-600 focus:ring-0 text-sm font-medium" 
+                    placeholder="Seu nome executivo" 
+                    required
+                  />
                 </div>
-              )}
-            </div>
+              </div>
 
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
-                Confirmar Senha
-              </label>
-              <input
-                type="password"
-                id="confirmPassword"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                placeholder="••••••••"
-                className="w-full bg-gray-700 border border-gray-600 rounded px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-yellow-400"
-                required
-              />
-            </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-primary text-[10px] font-bold uppercase tracking-[0.2em] ml-1">E-mail</label>
+                <div className="relative flex items-center rounded-lg border border-primary/20 bg-background-dark/50 transition-all duration-300 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
+                  <span className="material-symbols-outlined ml-4 text-primary/60">mail</span>
+                  <input 
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="w-full border-none bg-transparent py-3 px-4 text-white placeholder:text-slate-600 focus:ring-0 text-sm font-medium" 
+                    placeholder="exemplo@corporativo.com" 
+                    required
+                  />
+                </div>
+              </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-2 rounded transition disabled:opacity-50 mt-6"
-            >
-              {loading ? 'Criando conta...' : 'Criar Conta'}
-            </button>
-          </form>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-primary text-[10px] font-bold uppercase tracking-[0.2em] ml-1">Senha Master</label>
+                <div className="relative flex items-center rounded-lg border border-primary/20 bg-background-dark/50 transition-all duration-300 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
+                  <span className="material-symbols-outlined ml-4 text-primary/60">lock</span>
+                  <input 
+                    name="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="w-full border-none bg-transparent py-3 px-4 text-white placeholder:text-slate-600 focus:ring-0 text-sm font-medium" 
+                    placeholder="Mínimo 8 caracteres" 
+                    required
+                  />
+                </div>
+                {formData.password && (
+                  <div className="px-1 mt-1">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-[9px] uppercase tracking-widest text-slate-500 font-bold">Segurança:</span>
+                      <span className={`text-[9px] uppercase tracking-widest font-bold text-${strengthColor}-500`}>{passwordStrength.message}</span>
+                    </div>
+                    <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full bg-${strengthColor}-500 transition-all duration-500`} 
+                        style={{ width: `${(passwordStrength.level + 1) * 20}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
+              </div>
 
-          <div className="mt-6 text-center">
-            <p className="text-gray-400">
-              Já tem conta?{' '}
-              <Link
-                href="/login"
-                className="text-yellow-400 hover:text-yellow-500 font-medium"
-              >
-                Faça login
-              </Link>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-primary text-[10px] font-bold uppercase tracking-[0.2em] ml-1">Confirmar Senha</label>
+                <div className="relative flex items-center rounded-lg border border-primary/20 bg-background-dark/50 transition-all duration-300 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
+                  <span className="material-symbols-outlined ml-4 text-primary/60">verified</span>
+                  <input 
+                    name="confirmPassword"
+                    type="password"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    className="w-full border-none bg-transparent py-3 px-4 text-white placeholder:text-slate-600 focus:ring-0 text-sm font-medium" 
+                    placeholder="Repita sua senha" 
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-4 mt-4">
+                <button 
+                  type="submit"
+                  disabled={loading}
+                  className="metallic-gold text-black font-bold text-sm tracking-[0.1em] uppercase py-4 rounded-lg shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 transition-all active:scale-95"
+                >
+                  <span className="material-symbols-outlined text-xl">how_to_reg</span>
+                  {loading ? 'PROCESSANDO...' : 'CRIAR MINHA CONTA'}
+                </button>
+
+                <div className="flex items-center gap-4 my-1">
+                  <div className="h-px bg-primary/20 flex-1"></div>
+                  <span className="text-slate-600 text-[10px] font-bold uppercase tracking-widest">Já é membro?</span>
+                  <div className="h-px bg-primary/20 flex-1"></div>
+                </div>
+
+                <Link 
+                  href="/login" 
+                  className="border border-primary/40 hover:border-primary text-primary font-bold text-sm tracking-[0.1em] uppercase py-4 rounded-lg transition-all bg-transparent hover:bg-primary/5 flex items-center justify-center"
+                >
+                  ACESSAR CONTA EXISTENTE
+                </Link>
+              </div>
+            </form>
+          </div>
+
+          <div className="mt-8 text-center lg:text-left">
+            <p className="text-slate-500 text-[10px] uppercase tracking-widest leading-relaxed">
+              Ao se cadastrar, você concorda com nossos 
+              <Link href="/termos" className="text-primary font-bold hover:underline mx-1">Termos de Uso</Link>
+              e nossa 
+              <Link href="/privacidade" className="text-primary font-bold hover:underline ml-1">Política de Privacidade</Link>.
             </p>
           </div>
         </div>
       </div>
+
+      <div className="fixed inset-0 pointer-events-none z-50 opacity-[0.03]" style={{ backgroundImage: "radial-gradient(#e1b12d 0.5px, transparent 0.5px)", backgroundSize: "32px 32px" }}></div>
     </div>
   );
 }

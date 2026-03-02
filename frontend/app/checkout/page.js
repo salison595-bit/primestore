@@ -7,12 +7,14 @@ import { useCart } from '@/hooks/useCart';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import paymentService from '@/services/paymentService';
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, clearCart } = useCart();
+  const { items } = useCart();
   const [loading, setLoading] = useState(false);
-  const [orderPlaced, setOrderPlaced] = useState(false);
+  const [orderPlaced] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   // Dados do formulário
   const [formData, setFormData] = useState({
@@ -43,41 +45,64 @@ export default function CheckoutPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMsg('');
 
     try {
-      // Simular envio para API
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      // Simular sucesso
-      setOrderPlaced(true);
-      clearCart();
-
-      // Redirecionar após 3 segundos
-      setTimeout(() => {
-        router.push('/success');
-      }, 3000);
+      const itemsPayload = items.map((it) => ({
+        name: it.name,
+        quantity: it.quantity,
+        price: it.price,
+      }));
+      const session = await paymentService.createStripeCheckoutSession({
+        items: itemsPayload,
+      });
+      if (session?.url) {
+        router.push(session.url);
+        return;
+      }
+      setErrorMsg('Não foi possível iniciar o pagamento');
     } catch (error) {
       console.error('Erro ao processar pedido:', error);
-      alert('Erro ao processar pedido');
+      setErrorMsg('Erro ao processar pedido');
     } finally {
       setLoading(false);
     }
   };
 
-  if (orderPlaced) {
+  const handleRetry = async () => {
+    if (loading) return;
+    setLoading(true);
+    setErrorMsg('');
+    try {
+      const itemsPayload = items.map((it) => ({
+        name: it.name,
+        quantity: it.quantity,
+        price: it.price,
+      }));
+      const session = await paymentService.createStripeCheckoutSession({
+        items: itemsPayload,
+      });
+      if (session?.url) {
+        router.push(session.url);
+        return;
+      }
+      setErrorMsg('Não foi possível iniciar o pagamento');
+    } catch {
+      setErrorMsg('Erro ao processar pedido');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (items.length === 0) {
     return (
-      <div className="bg-black text-white min-h-screen">
+      <div className="bg-background-dark text-white min-h-screen font-sans">
         <Header />
-        <div className="max-w-6xl mx-auto px-4 py-24 text-center">
-          <div className="mb-6">
-            <div className="inline-block text-6xl">✓</div>
-          </div>
-          <h1 className="text-4xl font-bold mb-4">Pedido Confirmado!</h1>
-          <p className="text-gray-400 mb-8">
-            Você será redirecionado para a página de sucesso...
-          </p>
-          <Link href="/" className="text-yellow-600 hover:text-yellow-500">
-            Voltar para home
+        <div className="flex flex-col justify-center items-center py-40 px-6">
+          <span className="material-symbols-outlined text-6xl text-white/10 mb-6 font-light">shopping_bag</span>
+          <h1 className="text-2xl font-bold uppercase tracking-widest mb-4">Seu carrinho está vazio</h1>
+          <Link href="/produtos" className="bg-primary text-black font-bold py-3 px-10 rounded-sm text-[10px] tracking-[0.2em] uppercase hover:bg-white transition-all">
+            Ver Catálogo
           </Link>
         </div>
         <Footer />
@@ -85,305 +110,203 @@ export default function CheckoutPage() {
     );
   }
 
-  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shipping = subtotal > 100 ? 0 : 15;
-  const tax = subtotal * 0.1;
-  const total = subtotal + shipping + tax;
+  const subtotal = items.reduce((acc, it) => acc + it.price * it.quantity, 0);
+  const shipping = subtotal > 500 ? 0 : 45;
+  const total = subtotal + shipping;
 
-  if (items.length === 0 && !orderPlaced) {
-    return (
-      <div className="bg-black text-white min-h-screen">
-        <Header />
-        <div className="max-w-6xl mx-auto px-4 py-24 text-center">
-          <h1 className="text-3xl font-bold mb-4">Carrinho Vazio</h1>
-          <p className="text-gray-400 mb-8">
-            Você não tem nenhum item no carrinho
-          </p>
-          <Link
-            href="/produtos"
-            className="inline-block bg-yellow-600 text-black px-8 py-3 rounded font-semibold hover:bg-yellow-500 transition-colors"
-          >
-            Continuar Comprando
-          </Link>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
+  const formattedTotal = new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(total);
 
   return (
-    <div className="bg-black text-white min-h-screen">
+    <div className="bg-[#050505] text-white min-h-screen flex flex-col font-manrope">
       <Header />
 
-      <div className="max-w-6xl mx-auto px-4 py-12">
-        <h1 className="text-4xl font-bold mb-12">
-          FINALIZAR <span className="text-yellow-600">COMPRA</span>
-        </h1>
+      <main className="flex-1 relative pt-32 pb-20 px-6">
+        {/* Background Decoration */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-[-10%] right-[-5%] w-[40%] h-[40%] bg-[#d4af37]/5 rounded-full blur-[120px]" />
+          <div className="absolute bottom-[-10%] left-[-5%] w-[40%] h-[40%] bg-[#d4af37]/5 rounded-full blur-[120px]" />
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-          {/* Formulário */}
-          <div className="lg:col-span-2">
-            <form onSubmit={handleSubmit} className="space-y-8">
-              {/* Dados Pessoais */}
-              <div className="bg-gray-900 border border-gray-800 rounded p-6">
-                <h2 className="text-xl font-semibold mb-6">Dados Pessoais</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <input
-                    type="text"
-                    name="fullName"
-                    placeholder="Nome completo"
-                    value={formData.fullName}
-                    onChange={handleChange}
-                    required
-                    className="bg-gray-800 border border-gray-700 rounded px-4 py-3 text-white placeholder-gray-500 focus:border-yellow-600 outline-none transition-colors"
-                  />
-                  <input
-                    type="email"
-                    name="email"
-                    placeholder="E-mail"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    className="bg-gray-800 border border-gray-700 rounded px-4 py-3 text-white placeholder-gray-500 focus:border-yellow-600 outline-none transition-colors"
-                  />
-                  <input
-                    type="tel"
-                    name="phone"
-                    placeholder="Telefone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    required
-                    className="bg-gray-800 border border-gray-700 rounded px-4 py-3 text-white placeholder-gray-500 focus:border-yellow-600 outline-none transition-colors"
-                  />
-                  <input
-                    type="text"
-                    name="cpf"
-                    placeholder="CPF"
-                    value={formData.cpf}
-                    onChange={handleChange}
-                    required
-                    className="bg-gray-800 border border-gray-700 rounded px-4 py-3 text-white placeholder-gray-500 focus:border-yellow-600 outline-none transition-colors"
-                  />
-                </div>
-              </div>
-
-              {/* Endereço */}
-              <div className="bg-gray-900 border border-gray-800 rounded p-6">
-                <h2 className="text-xl font-semibold mb-6">Endereço de Entrega</h2>
-                <div className="space-y-4">
-                  <input
-                    type="text"
-                    name="address"
-                    placeholder="Rua/Avenida"
-                    value={formData.address}
-                    onChange={handleChange}
-                    required
-                    className="w-full bg-gray-800 border border-gray-700 rounded px-4 py-3 text-white placeholder-gray-500 focus:border-yellow-600 outline-none transition-colors"
-                  />
-                  <div className="grid grid-cols-2 gap-4">
-                    <input
-                      type="text"
-                      name="number"
-                      placeholder="Número"
-                      value={formData.number}
-                      onChange={handleChange}
-                      required
-                      className="bg-gray-800 border border-gray-700 rounded px-4 py-3 text-white placeholder-gray-500 focus:border-yellow-600 outline-none transition-colors"
-                    />
-                    <input
-                      type="text"
-                      name="complement"
-                      placeholder="Complemento (opcional)"
-                      value={formData.complement}
-                      onChange={handleChange}
-                      className="bg-gray-800 border border-gray-700 rounded px-4 py-3 text-white placeholder-gray-500 focus:border-yellow-600 outline-none transition-colors"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <input
-                      type="text"
-                      name="city"
-                      placeholder="Cidade"
-                      value={formData.city}
-                      onChange={handleChange}
-                      required
-                      className="bg-gray-800 border border-gray-700 rounded px-4 py-3 text-white placeholder-gray-500 focus:border-yellow-600 outline-none transition-colors"
-                    />
-                    <input
-                      type="text"
-                      name="state"
-                      placeholder="UF"
-                      value={formData.state}
-                      onChange={handleChange}
-                      required
-                      maxLength="2"
-                      className="bg-gray-800 border border-gray-700 rounded px-4 py-3 text-white placeholder-gray-500 focus:border-yellow-600 outline-none transition-colors"
-                    />
-                  </div>
-                  <input
-                    type="text"
-                    name="zipCode"
-                    placeholder="CEP"
-                    value={formData.zipCode}
-                    onChange={handleChange}
-                    required
-                    className="w-full bg-gray-800 border border-gray-700 rounded px-4 py-3 text-white placeholder-gray-500 focus:border-yellow-600 outline-none transition-colors"
-                  />
-                </div>
-              </div>
-
-              {/* Pagamento */}
-              <div className="bg-gray-900 border border-gray-800 rounded p-6">
-                <h2 className="text-xl font-semibold mb-6">Dados do Cartão</h2>
-                <div className="space-y-4">
-                  <input
-                    type="text"
-                    name="cardName"
-                    placeholder="Nome no cartão"
-                    value={formData.cardName}
-                    onChange={handleChange}
-                    required
-                    className="w-full bg-gray-800 border border-gray-700 rounded px-4 py-3 text-white placeholder-gray-500 focus:border-yellow-600 outline-none transition-colors"
-                  />
-                  <input
-                    type="text"
-                    name="cardNumber"
-                    placeholder="Número do cartão"
-                    value={formData.cardNumber}
-                    onChange={handleChange}
-                    required
-                    maxLength="16"
-                    className="w-full bg-gray-800 border border-gray-700 rounded px-4 py-3 text-white placeholder-gray-500 focus:border-yellow-600 outline-none transition-colors"
-                  />
-                  <div className="grid grid-cols-2 gap-4">
-                    <input
-                      type="text"
-                      name="cardExpiry"
-                      placeholder="MM/YY"
-                      value={formData.cardExpiry}
-                      onChange={handleChange}
-                      required
-                      maxLength="5"
-                      className="bg-gray-800 border border-gray-700 rounded px-4 py-3 text-white placeholder-gray-500 focus:border-yellow-600 outline-none transition-colors"
-                    />
-                    <input
-                      type="text"
-                      name="cardCvv"
-                      placeholder="CVV"
-                      value={formData.cardCvv}
-                      onChange={handleChange}
-                      required
-                      maxLength="3"
-                      className="bg-gray-800 border border-gray-700 rounded px-4 py-3 text-white placeholder-gray-500 focus:border-yellow-600 outline-none transition-colors"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Botão Submit */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-yellow-600 text-black py-4 rounded font-semibold text-lg hover:bg-yellow-500 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'PROCESSANDO...' : 'FINALIZAR COMPRA'}
-              </button>
-            </form>
+        <div className="relative z-10 max-w-7xl mx-auto">
+          <div className="mb-12">
+            <span className="text-[#d4af37] text-[10px] font-bold tracking-[0.5em] uppercase mb-4 block">
+              FINALIZAÇÃO DE COMPRA
+            </span>
+            <h1 className="text-4xl md:text-5xl font-light tracking-tight uppercase leading-tight">
+              CHECKOUT <span className="text-[#d4af37] font-medium">SEGURO</span>
+            </h1>
           </div>
 
-          {/* Resumo da Compra */}
-          <div>
-            <div className="bg-gray-900 border border-gray-800 rounded p-6 sticky top-20">
-              <h2 className="text-xl font-semibold mb-6">Resumo da Compra</h2>
-
-              {/* Itens */}
-              <div className="space-y-4 mb-6 pb-6 border-b border-gray-800">
-                {items.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex gap-4"
-                  >
-                    {item.image && (
-                      <div className="relative w-16 h-16 bg-gray-800 rounded overflow-hidden flex-shrink-0">
-                        <Image
-                          src={item.image}
-                          alt={item.name}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold truncate">
-                        {item.name}
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        Qtd: {item.quantity}
-                      </p>
-                      <p className="text-yellow-600 font-semibold">
-                        {new Intl.NumberFormat('pt-BR', {
-                          style: 'currency',
-                          currency: 'BRL',
-                        }).format(item.price * item.quantity)}
-                      </p>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 xl:gap-20">
+            {/* Left: Form */}
+            <div className="lg:col-span-7">
+              <form onSubmit={handleSubmit} className="space-y-8">
+                {/* Shipping Info Card */}
+                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[32px] p-8 md:p-10">
+                  <div className="flex items-center gap-4 mb-10">
+                    <div className="w-12 h-12 rounded-2xl bg-[#d4af37]/10 border border-[#d4af37]/20 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-[#d4af37]">local_shipping</span>
+                    </div>
+                    <h2 className="text-sm font-bold uppercase tracking-[0.3em]">Endereço de Entrega</h2>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-bold text-gray-500 uppercase tracking-widest ml-1">Nome Completo</label>
+                      <input 
+                        name="fullName"
+                        value={formData.fullName}
+                        onChange={handleChange}
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-xs font-medium outline-none focus:border-[#d4af37]/50 transition-all placeholder:text-gray-700" 
+                        placeholder="NOME DO DESTINATÁRIO" 
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-bold text-gray-500 uppercase tracking-widest ml-1">E-mail</label>
+                      <input 
+                        name="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-xs font-medium outline-none focus:border-[#d4af37]/50 transition-all placeholder:text-gray-700" 
+                        placeholder="EXEMPLO@EMAIL.COM" 
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                      <label className="text-[9px] font-bold text-gray-500 uppercase tracking-widest ml-1">Logradouro</label>
+                      <input 
+                        name="address"
+                        value={formData.address}
+                        onChange={handleChange}
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-xs font-medium outline-none focus:border-[#d4af37]/50 transition-all placeholder:text-gray-700" 
+                        placeholder="RUA, AVENIDA, NÚMERO..." 
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-bold text-gray-500 uppercase tracking-widest ml-1">Cidade</label>
+                      <input 
+                        name="city"
+                        value={formData.city}
+                        onChange={handleChange}
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-xs font-medium outline-none focus:border-[#d4af37]/50 transition-all placeholder:text-gray-700" 
+                        placeholder="CIDADE" 
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-bold text-gray-500 uppercase tracking-widest ml-1">CEP</label>
+                      <input 
+                        name="zipCode"
+                        value={formData.zipCode}
+                        onChange={handleChange}
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-xs font-medium outline-none focus:border-[#d4af37]/50 transition-all placeholder:text-gray-700" 
+                        placeholder="00000-000" 
+                        required
+                      />
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
 
-              {/* Totalizações */}
-              <div className="space-y-3 mb-6">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Subtotal</span>
-                  <span>
-                    {new Intl.NumberFormat('pt-BR', {
-                      style: 'currency',
-                      currency: 'BRL',
-                    }).format(subtotal)}
-                  </span>
+                {/* Payment Card */}
+                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[32px] p-8 md:p-10">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="w-12 h-12 rounded-2xl bg-[#d4af37]/10 border border-[#d4af37]/20 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-[#d4af37]">verified_user</span>
+                    </div>
+                    <h2 className="text-sm font-bold uppercase tracking-[0.3em]">Pagamento Seguro</h2>
+                  </div>
+                  <p className="text-[11px] text-gray-500 uppercase tracking-widest leading-relaxed mb-8">
+                    Sua transação será processada pela <span className="text-white">Stripe</span>, líder mundial em pagamentos seguros, garantindo proteção total aos seus dados.
+                  </p>
+                  <div className="flex items-center gap-6 grayscale opacity-20">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg" alt="Stripe" className="h-5" />
+                    <div className="h-4 w-px bg-white/10" />
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" className="h-4" />
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" className="h-6" />
+                  </div>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Frete</span>
-                  <span>
-                    {new Intl.NumberFormat('pt-BR', {
-                      style: 'currency',
-                      currency: 'BRL',
-                    }).format(shipping)}
-                  </span>
+
+                {errorMsg && (
+                  <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-6 rounded-2xl text-[10px] font-bold uppercase tracking-widest flex items-center gap-3">
+                    <span className="material-symbols-outlined">error</span>
+                    {errorMsg}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full relative overflow-hidden bg-[#d4af37] hover:bg-[#b8962d] text-[#050505] font-bold py-6 rounded-2xl text-xs tracking-[0.4em] uppercase shadow-[0_20px_40px_rgba(212,175,55,0.2)] disabled:opacity-50 transition-all active:scale-[0.98] group"
+                >
+                  <span className="relative z-10">{loading ? 'PROCESSANDO...' : 'FINALIZAR PEDIDO'}</span>
+                  <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                </button>
+              </form>
+            </div>
+
+            {/* Right: Summary */}
+            <div className="lg:col-span-5">
+              <div className="sticky top-32 space-y-8">
+                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[32px] p-8 md:p-10">
+                  <h2 className="text-sm font-bold uppercase tracking-[0.3em] mb-10 pb-4 border-b border-white/5">Resumo</h2>
+                  
+                  <div className="space-y-6 mb-10 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                    {items.map((it) => (
+                      <div key={it.id} className="flex gap-5 group">
+                        <div className="relative w-20 h-20 rounded-2xl overflow-hidden bg-[#0a0a0a] border border-white/5 flex-shrink-0">
+                          <Image src={it.image} alt={it.name} fill className="object-cover transition-transform duration-500 group-hover:scale-110" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-xs font-medium text-gray-200 uppercase truncate mb-1">{it.name}</h4>
+                          <p className="text-[10px] text-gray-500 mb-2">QUANTIDADE: {it.quantity}</p>
+                          <p className="text-[#d4af37] font-bold text-xs">{(it.price * it.quantity).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="space-y-4 pt-8 border-t border-white/5">
+                    <div className="flex justify-between text-[10px] font-bold tracking-widest text-gray-500 uppercase">
+                      <span>Subtotal</span>
+                      <span className="text-white">{subtotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                    </div>
+                    <div className="flex justify-between text-[10px] font-bold tracking-widest text-gray-500 uppercase">
+                      <span>Envio Express</span>
+                      <span className={shipping === 0 ? 'text-green-400' : 'text-white'}>
+                        {shipping === 0 ? 'GRÁTIS' : shipping.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-baseline pt-6 mt-4 border-t border-white/5">
+                      <span className="text-xs font-bold tracking-[0.2em] text-white uppercase">Total</span>
+                      <span className="text-2xl font-bold text-[#d4af37] tracking-tighter">
+                        {formattedTotal}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Impostos</span>
-                  <span>
-                    {new Intl.NumberFormat('pt-BR', {
-                      style: 'currency',
-                      currency: 'BRL',
-                    }).format(tax)}
-                  </span>
+
+                {/* Trust Indicators */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-center">
+                    <span className="material-symbols-outlined text-[#d4af37] text-xl mb-2">lock</span>
+                    <p className="text-[8px] font-bold tracking-widest text-gray-500 uppercase">Criptografia 256-bit</p>
+                  </div>
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-center">
+                    <span className="material-symbols-outlined text-[#d4af37] text-xl mb-2">verified</span>
+                    <p className="text-[8px] font-bold tracking-widest text-gray-500 uppercase">Revendedor Autorizado</p>
+                  </div>
                 </div>
               </div>
-
-              {/* Total */}
-              <div className="border-t border-gray-800 pt-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-lg font-semibold">TOTAL</span>
-                  <span className="text-2xl font-bold text-yellow-600">
-                    {new Intl.NumberFormat('pt-BR', {
-                      style: 'currency',
-                      currency: 'BRL',
-                    }).format(total)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Disclaimer */}
-              <p className="text-xs text-gray-500 mt-6">
-                Você concorda com os Termos de Serviço e Política de
-                Privacidade ao finalizar a compra.
-              </p>
             </div>
           </div>
         </div>
-      </div>
+      </main>
 
       <Footer />
     </div>

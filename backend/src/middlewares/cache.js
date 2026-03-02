@@ -1,10 +1,7 @@
-/**
- * Middleware de Cache
- * Implementa estratégia de cache em memória com expiração
- * Em produção, usar Redis para cache distribuído
- */
-
-const { logger } = require('../utils/logger');
+import { createLogger } from '../utils/logger.js';
+import { createClient } from 'redis';
+import { CACHE_TTLS } from '../config/constants.js';
+const logger = createLogger('CacheMiddleware');
 
 class CacheManager {
   constructor() {
@@ -42,6 +39,7 @@ class CacheManager {
       this.cache.delete(key);
       this.timers.delete(key);
       logger.debug('Cache expirado', { key });
+      try { metrics.expires++; } catch {}
     }, ttl * 1000);
 
     this.timers.set(key, timer);
@@ -75,56 +73,163 @@ class CacheManager {
   }
 }
 
-const cacheManager = new CacheManager();
+export const cacheManager = new CacheManager();
 
+// Redis client (opcional)
+let redisClient = null;
+const redisUrl = process.env.REDIS_URL;
+const KEY_PREFIX = process.env.CACHE_KEY_PREFIX || 'prime:';
+if (redisUrl) {
+  try {
+    redisClient = createClient({ url: redisUrl });
+    redisClient.on('error', (err) => logger.warn('Redis error', { err: String(err) }));
+    // Lazy connect: conecta no primeiro uso
+  } catch (err) {
+    logger.warn('Falha ao inicializar Redis client', { err: String(err) });
+    redisClient = null;
+  }
+}
+
+export const getRedisStatus = async () => {
+  const info = { enabled: Boolean(redisClient), connected: false };
+  if (!redisClient) return info;
+  try {
+    if (!redisClient.isOpen) {
+      await redisClient.connect();
+    }
+    await redisClient.ping();
+    info.connected = true;
+    try {
+      const scan = await redisClient.scan(0, { MATCH: 'GET:/api/products*', COUNT: 100 });
+      info.sampleKeys = Array.isArray(scan) ? scan[1]?.length ?? 0 : 0;
+    } catch {}
+  } catch (err) {
+    info.error = String(err);
+  }
+  return info;
+};
+
+const metrics = {
+  hitsMem: 0,
+  hitsRedis: 0,
+  setsMem: 0,
+  setsRedis: 0,
+  misses: 0,
+  expires: 0
+};
+
+export const getCacheMetrics = () => ({ ...metrics });
+
+export const clearAllCache = async () => {
+  const clearedMem = cacheManager.size();
+  cacheManager.clear();
+  let clearedRedis = 0;
+  if (redisClient) {
+    try {
+      if (!redisClient.isOpen) {
+        await redisClient.connect();
+      }
+      const pattern = `${KEY_PREFIX}GET:*`;
+      let cursor = 0;
+      do {
+        const reply = await redisClient.scan(cursor, { MATCH: pattern, COUNT: 100 });
+        cursor = Array.isArray(reply) ? Number(reply[0]) : 0;
+        const keys = Array.isArray(reply) ? reply[1] || [] : [];
+        if (keys.length) {
+          await redisClient.del(keys);
+          clearedRedis += keys.length;
+        }
+      } while (cursor !== 0);
+    } catch (err) {
+      logger.warn('Falha ao limpar chaves no Redis', { err: String(err) });
+    }
+  }
+  return { clearedMem, clearedRedis };
+};
 /**
  * Middleware para cache de resposta
  * Uso: app.use(cacheMiddleware())
  */
-const cacheMiddleware = () => {
+export const cacheMiddleware = () => {
   return (req, res, next) => {
-    // Apenas cachear GET requests
     if (req.method !== 'GET') {
       return next();
     }
 
-    // Gerar chave do cache baseado na URL e query
-    const cacheKey = `${req.method}:${req.originalUrl}`;
-
-    // Verificar se está em cache
-    const cachedResponse = cacheManager.get(cacheKey);
-    if (cachedResponse) {
-      logger.debug('Cache hit', { url: req.originalUrl });
-      return res.json(cachedResponse);
-    }
-
-    // Interceptar res.json para armazenar em cache
-    const originalJson = res.json.bind(res);
-    res.json = (data) => {
-      // Cachear apenas responses bem-sucedidas (200-299)
-      if (res.statusCode >= 200 && res.statusCode < 300) {
-        // Determinar TTL baseado na rota
-        let ttl = 300; // 5 min padrão
-
-        if (req.path.includes('/products')) ttl = 600; // 10 min para produtos
-        if (req.path.includes('/categories')) ttl = 1800; // 30 min para categorias
-        if (req.path.includes('/dashboard')) ttl = 60; // 1 min para dashboard
-
-        cacheManager.set(cacheKey, data, ttl);
-        logger.debug('Response cached', { url: req.originalUrl, ttl });
+    const cacheKey = `${KEY_PREFIX}${req.method}:${req.originalUrl}`;
+    const tryRedis = async () => {
+      if (!redisClient) return null;
+      try {
+        if (!redisClient.isOpen) {
+          await redisClient.connect();
+        }
+        const cached = await redisClient.get(cacheKey);
+        if (cached) {
+          logger.debug('Cache hit (redis)', { url: req.originalUrl });
+          try { metrics.hitsRedis++; } catch {}
+          return JSON.parse(cached);
+        }
+      } catch (err) {
+        logger.warn('Redis get falhou; fallback memória', { err: String(err) });
       }
-
-      return originalJson(data);
+      return null;
     };
 
-    next();
+    (async () => {
+      try {
+        const redisData = await tryRedis();
+        if (redisData) {
+          return res.json(redisData);
+        }
+
+        const memData = cacheManager.get(cacheKey);
+        if (memData) {
+          logger.debug('Cache hit (mem)', { url: req.originalUrl });
+          try { metrics.hitsMem++; } catch {}
+          return res.json(memData);
+        }
+        try { metrics.misses++; } catch {}
+      } catch {
+        // Ignorar erros de cache
+      }
+
+      const originalJson = res.json.bind(res);
+      res.json = async (data) => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          let ttl = CACHE_TTLS.default;
+          if (req.path.includes('/products')) ttl = CACHE_TTLS.products;
+          if (req.path.includes('/categories')) ttl = CACHE_TTLS.categories;
+          if (req.path.includes('/dashboard')) ttl = CACHE_TTLS.dashboard;
+
+          // memória
+          cacheManager.set(cacheKey, data, ttl);
+          logger.debug('Response cached (mem)', { url: req.originalUrl, ttl });
+
+          // redis
+          if (redisClient) {
+            try {
+              if (!redisClient.isOpen) {
+                await redisClient.connect();
+              }
+              await redisClient.setEx(cacheKey, ttl, JSON.stringify(data));
+              logger.debug('Response cached (redis)', { url: req.originalUrl, ttl });
+            } catch (err) {
+              logger.warn('Redis set falhou; mantido cache em memória', { err: String(err) });
+            }
+          }
+        }
+        return originalJson(data);
+      };
+
+      next();
+    })();
   };
 };
 
 /**
  * Função para invalidar cache de padrões específicos
  */
-const invalidateCache = (pattern) => {
+export const invalidateCache = (pattern) => {
   let count = 0;
   for (const [key] of cacheManager.cache) {
     if (key.includes(pattern)) {
@@ -136,8 +241,27 @@ const invalidateCache = (pattern) => {
   return count;
 };
 
-module.exports = {
-  cacheManager,
-  cacheMiddleware,
-  invalidateCache,
+export const invalidateCacheRedis = async (pattern) => {
+  let clearedRedis = 0;
+  if (!redisClient) return clearedRedis;
+  try {
+    if (!redisClient.isOpen) {
+      await redisClient.connect();
+    }
+    const match = `${KEY_PREFIX}GET:*${pattern}*`;
+    let cursor = 0;
+    do {
+      const reply = await redisClient.scan(cursor, { MATCH: match, COUNT: 100 });
+      cursor = Array.isArray(reply) ? Number(reply[0]) : 0;
+      const keys = Array.isArray(reply) ? reply[1] || [] : [];
+      if (keys.length) {
+        await redisClient.del(keys);
+        clearedRedis += keys.length;
+      }
+    } while (cursor !== 0);
+    logger.info('Redis cache invalidated', { pattern, clearedRedis });
+  } catch (err) {
+    logger.warn('Falha ao invalidar chaves no Redis', { err: String(err), pattern });
+  }
+  return clearedRedis;
 };

@@ -1,115 +1,80 @@
 'use client';
 
+import Link from 'next/link';
+
 export default function Footer() {
-  const currentYear = new Date().getFullYear();
-
-  const footerColumns = [
-    {
-      icon: '🚀',
-      title: 'Entrega Rápida',
-      description: 'Enviamos seus produtos em até 2 dias úteis com rastreamento',
-    },
-    {
-      icon: '🛡️',
-      title: 'Compra Segura',
-      description: 'Proteção completa nas suas transações com certificação SSL',
-    },
-    {
-      icon: '⭐',
-      title: 'Qualidade Premium',
-      description: 'Todos os produtos são testados e certificados',
-    },
-  ];
-
-  const links = {
-    Sobre: ['Sobre nós', 'Carreiras', 'Blog', 'Imprensa'],
-    Suporte: ['Contato', 'FAQ', 'Devoluções', 'Garantia'],
-    Legais: ['Privacidade', 'Termos', 'Cookies', 'Conformidade'],
-  };
-
   return (
-    <>
-      {/* Features Section */}
-      <section className="bg-gray-900 border-y border-gray-800 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {footerColumns.map((column, idx) => (
-              <div key={idx} className="text-center">
-                <div className="text-4xl mb-3">{column.icon}</div>
-                <h3 className="text-yellow-600 font-semibold text-lg mb-2">{column.title}</h3>
-                <p className="text-gray-400 text-sm">{column.description}</p>
-              </div>
+    <footer className="bg-[#050505] pt-24 pb-12 px-6 md:px-12 lg:px-16 border-t border-white/5 font-manrope relative overflow-hidden">
+      {/* Background Decoration */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute bottom-[-10%] left-[-5%] w-[30%] h-[30%] bg-[#d4af37]/5 rounded-full blur-[100px]" />
+      </div>
+
+      <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-16 lg:gap-8 mb-20">
+        <div className="lg:col-span-4">
+          <Link href="/" className="flex items-center gap-3 mb-8 group">
+            <div className="w-10 h-10 rounded-xl bg-[#d4af37]/10 border border-[#d4af37]/20 flex items-center justify-center group-hover:bg-[#d4af37]/20 transition-all duration-500">
+              <span className="material-symbols-outlined text-[#d4af37] text-xl fill-1" style={{ fontVariationSettings: "'FILL' 1, 'wght' 300, 'GRAD' 0, 'opsz' 48" }}>
+                crown
+              </span>
+            </div>
+            <span className="text-xl font-light tracking-[0.3em] text-white">PRIME <span className="font-medium text-[#d4af37]">STORE</span></span>
+          </Link>
+          <p className="text-gray-500 text-[10px] font-light leading-relaxed max-w-xs uppercase tracking-[0.2em] mb-10">
+            A excelência em curadoria e serviços de luxo. Do lifestyle ao universo automotivo de alta performance.
+          </p>
+          <div className="flex gap-4">
+            {['instagram', 'facebook', 'linkedin', 'youtube'].map((social) => (
+              <a key={social} href="#" className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-[#d4af37] hover:border-[#d4af37]/30 transition-all group">
+                <span className="material-symbols-outlined text-lg group-hover:scale-110 transition-transform">public</span>
+              </a>
             ))}
           </div>
         </div>
-      </section>
 
-      {/* Footer */}
-      <footer className="bg-black border-t border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          {/* Links Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
-            {/* Brand */}
-            <div>
-              <h3 className="text-yellow-600 font-bold text-lg mb-4">PRIME STORE</h3>
-              <p className="text-gray-400 text-sm mb-6">
-                Sua loja de produtos premium com qualidade garantida.
-              </p>
-              {/* Social Links */}
-              <div className="flex gap-4">
-                <a
-                  href="https://instagram.com"
-                  className="text-gray-400 hover:text-yellow-600 transition-colors"
-                  aria-label="Instagram"
-                >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.057-1.645.069-4.849.069-3.205 0-3.584-.012-4.849-.069-3.259-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163C8.756 0 8.331.012 7.052.07 2.696.272.273 2.69.07 7.052.012 8.331 0 8.756 0 12c0 3.244.011 3.668.07 4.948.202 4.358 2.612 6.78 6.979 6.98 1.281.058 1.7.07 4.948.07 3.259 0 3.668-.012 4.948-.07 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.071-1.699.071-4.948 0-3.244-.011-3.668-.07-4.948-.196-4.354-2.617-6.78-6.979-6.98C15.668.012 15.259 0 12 0z" />
-                    <path d="M12 5.838c-3.403 0-6.162 2.759-6.162 6.162S8.597 18.162 12 18.162s6.162-2.759 6.162-6.162S15.403 5.838 12 5.838zm0 10.162c-2.209 0-4-1.791-4-4s1.791-4 4-4 4 1.791 4 4-1.791 4-4 4z" />
-                  </svg>
-                </a>
-                <a
-                  href="https://whatsapp.com"
-                  className="text-gray-400 hover:text-yellow-600 transition-colors"
-                  aria-label="WhatsApp"
-                >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 0C5.373 0 0 5.373 0 12c0 2.148.548 4.179 1.505 5.925L0 24l6.325-1.395C9.771 23.316 10.851 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 2c5.523 0 10 4.477 10 10s-4.477 10-10 10c-.955 0-1.877-.145-2.753-.415L3 20.362l1.262-3.743C3.236 15.213 2 13.724 2 12c0-5.523 4.477-10 10-10z" />
-                  </svg>
-                </a>
-              </div>
-            </div>
+        <div className="lg:col-span-2">
+          <h4 className="text-[10px] font-bold text-white tracking-[0.4em] uppercase mb-8">Navegação</h4>
+          <ul className="space-y-4 text-[10px] text-gray-500 tracking-[0.2em] uppercase font-medium">
+            <li><Link href="/" className="hover:text-[#d4af37] transition-colors">Início</Link></li>
+            <li><Link href="/produtos" className="hover:text-[#d4af37] transition-colors">Produtos</Link></li>
+            <li><Link href="/ofertas" className="hover:text-[#d4af37] transition-colors">Ofertas</Link></li>
+            <li><Link href="/contato" className="hover:text-[#d4af37] transition-colors">Contato</Link></li>
+          </ul>
+        </div>
 
-            {/* Links Sections */}
-            {Object.entries(links).map(([section, items]) => (
-              <div key={section}>
-                <h4 className="text-white font-semibold text-sm mb-4 uppercase tracking-widest">
-                  {section}
-                </h4>
-                <ul className="space-y-2">
-                  {items.map((item) => (
-                    <li key={item}>
-                      <a
-                        href="#"
-                        className="text-gray-400 hover:text-yellow-600 transition-colors text-sm"
-                      >
-                        {item}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
+        <div className="lg:col-span-2">
+          <h4 className="text-[10px] font-bold text-white tracking-[0.4em] uppercase mb-8">Institucional</h4>
+          <ul className="space-y-4 text-[10px] text-gray-500 tracking-[0.2em] uppercase font-medium">
+            <li><Link href="/historia" className="hover:text-[#d4af37] transition-colors">Nossa História</Link></li>
+            <li><Link href="/privacidade" className="hover:text-[#d4af37] transition-colors">Privacidade</Link></li>
+            <li><Link href="/termos" className="hover:text-[#d4af37] transition-colors">Termos de Uso</Link></li>
+            <li><Link href="/perfil/pedidos" className="hover:text-[#d4af37] transition-colors">Rastreio</Link></li>
+          </ul>
+        </div>
 
-          {/* Divider */}
-          <div className="border-t border-gray-800 pt-8">
-            <div className="flex flex-col md:flex-row justify-between items-center text-gray-400 text-sm">
-              <p>© {currentYear} PRIME STORE. Todos os direitos reservados.</p>
-              <p>Desenvolvido com ❤️ para você</p>
-            </div>
+        <div className="lg:col-span-4">
+          <h4 className="text-[10px] font-bold text-white tracking-[0.4em] uppercase mb-8">Newsletter VIP</h4>
+          <p className="text-[10px] text-gray-500 mb-8 uppercase tracking-[0.2em] leading-relaxed">Assine para receber convites e lançamentos exclusivos em primeira mão.</p>
+          <div className="relative group">
+            <input 
+              type="email" 
+              placeholder="SEU E-MAIL EXECUTIVE" 
+              className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-[10px] font-bold tracking-widest text-white outline-none focus:border-[#d4af37]/50 transition-all placeholder:text-gray-700"
+            />
+            <button className="absolute right-4 top-1/2 -translate-y-1/2 text-[#d4af37] font-bold text-[10px] tracking-widest uppercase hover:text-white transition-colors">ASSINAR</button>
           </div>
         </div>
-      </footer>
-    </>
+      </div>
+
+      <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 relative z-10">
+        <p className="text-[9px] text-gray-600 tracking-[0.3em] uppercase">
+          © {new Date().getFullYear()} <span className="text-gray-400">Prime Store Luxury</span>. Todos os direitos reservados.
+        </p>
+        <div className="flex items-center gap-8 text-[9px] text-gray-600 tracking-[0.3em] uppercase">
+          <Link href="/termos" className="hover:text-white transition-colors">Termos</Link>
+          <Link href="/privacidade" className="hover:text-white transition-colors">Privacidade</Link>
+          <Link href="/cookies" className="hover:text-white transition-colors">Cookies</Link>
+        </div>
+      </div>
+    </footer>
   );
-}

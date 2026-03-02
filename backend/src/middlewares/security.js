@@ -24,7 +24,7 @@ export const securityHeaders = (req, res, next) => {
   // Content Security Policy
   res.setHeader(
     'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https:; frame-ancestors 'none';"
+    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: http: http://localhost:5000 http://localhost:3000; font-src 'self'; connect-src 'self' https: http: http://localhost:5000 http://localhost:3000; frame-ancestors 'none';"
   );
   
   // Referrer Policy

@@ -11,6 +11,10 @@ router.get('/image', async (req, res, next) => {
     if (!['http:', 'https:'].includes(parsed.protocol)) {
       return res.status(400).json({ error: 'Invalid protocol' });
     }
+    const allowed = (process.env.ALLOWED_IMAGE_HOSTS || 'images.unsplash.com').split(',').map(s => s.trim().toLowerCase());
+    if (!allowed.includes(parsed.hostname.toLowerCase())) {
+      return res.status(403).json({ error: 'Host não autorizado' });
+    }
 
     const response = await axios.get(url, {
       responseType: 'arraybuffer',

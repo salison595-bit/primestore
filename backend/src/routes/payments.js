@@ -6,6 +6,7 @@
  * GET  /api/payments
  * POST /api/payments/:paymentId/refund
  * POST /api/payments/:paymentId/cancel
+ * POST /api/payments/stripe/checkout-session
  */
 
 import express from 'express';
@@ -27,6 +28,17 @@ router.post(
 );
 
 /**
+ * POST /api/payments/stripe/checkout-session
+ * Cria sessão de Checkout do Stripe
+ * Protected - Cliente
+ */
+router.post(
+  '/stripe/checkout-session',
+  authMiddleware,
+  PaymentController.createStripeCheckoutSession
+);
+
+/**
  * POST /api/payments/process
  * Processa pagamento
  * Protected - Cliente
@@ -35,6 +47,17 @@ router.post(
   '/process',
   authMiddleware,
   PaymentController.processPayment
+);
+
+/**
+ * POST /api/payments/stripe/checkout-session
+ * Cria sessão de checkout do Stripe
+ * Protected - Cliente
+ */
+router.post(
+  '/stripe/checkout-session',
+  authMiddleware,
+  PaymentController.createStripeCheckoutSession
 );
 
 /**
@@ -57,6 +80,17 @@ router.get(
   '/',
   authMiddleware,
   PaymentController.getUserPayments
+);
+
+/**
+ * POST /api/payments/stripe/checkout-session
+ * Cria sessão de checkout do Stripe com metadata.orderId ou itens do carrinho
+ * Protected - Cliente
+ */
+router.post(
+  '/stripe/checkout-session',
+  authMiddleware,
+  PaymentController.createStripeCheckoutSession
 );
 
 /**

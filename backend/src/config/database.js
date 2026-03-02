@@ -9,8 +9,21 @@ let prisma;
 
 try {
   if (!global.prisma) {
+    const rawUrl = process.env.DATABASE_URL || '';
+    let finalUrl = rawUrl;
+    try {
+      const u = new URL(rawUrl);
+      if (!u.searchParams.has('sslmode')) {
+        u.searchParams.set('sslmode', 'require');
+      }
+      finalUrl = u.toString();
+    } catch {
+      finalUrl = rawUrl ? `${rawUrl}${rawUrl.includes('?') ? '&' : '?'}sslmode=require` : rawUrl;
+    }
+
     global.prisma = new PrismaClient({
-      log: process.env.NODE_ENV === 'development' ? ['info', 'warn', 'error'] : ['error']
+      log: process.env.NODE_ENV === 'development' ? ['info', 'warn', 'error'] : ['error'],
+      datasources: { db: { url: finalUrl } }
     });
   }
 

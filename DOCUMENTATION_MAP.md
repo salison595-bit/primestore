@@ -108,7 +108,13 @@ PRIME STORE
 → [.env.example](.env.example)
 
 **Testar tudo localmente?**
-→ [README.md](README.md)
+→ [LOCAL_SETUP.md](LOCAL_SETUP.md)
+
+**Referência da API?**
+→ [docs/API_REFERENCE.md](docs/API_REFERENCE.md)
+
+**Checklist de deploy?**
+→ [DEPLOY_CHECKLIST.md](DEPLOY_CHECKLIST.md)
 
 ---
 

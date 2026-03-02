@@ -6,8 +6,21 @@
 import { AppError } from '../utils/errors.js';
 import { createLogger } from '../utils/logger.js';
 import { HTTP_STATUS, ERROR_CODES } from '../config/constants.js';
+import axios from 'axios';
+import crypto from 'crypto';
+import * as Sentry from '@sentry/node';
 
 const logger = createLogger('ErrorHandler');
+const lastWebhookSent = new Map();
+const canSendWebhook = (key) => {
+  const now = Date.now();
+  const last = lastWebhookSent.get(key) || 0;
+  if (now - last < (parseInt(process.env.ERROR_WEBHOOK_MIN_INTERVAL_MS || '2000', 10))) {
+    return false;
+  }
+  lastWebhookSent.set(key, now);
+  return true;
+};
 
 /**
  * Middleware de erro global
@@ -20,6 +33,31 @@ export const errorHandler = (err, req, res, next) => {
   } else {
     logger.warn(`Erro esperado na rota ${req.method} ${req.path}: ${err.message}`);
   }
+
+  try {
+    const url = process.env.ERROR_WEBHOOK_URL;
+    const prodOnly = process.env.NODE_ENV === 'production' || process.env.FORCE_ERROR_WEBHOOK === 'true';
+    if (url && prodOnly) {
+      const payload = {
+        path: req.path,
+        method: req.method,
+        statusCode: err.statusCode || 500,
+        message: err.message || 'Erro interno',
+        stack: process.env.NODE_ENV === 'production' ? undefined : err.stack,
+        timestamp: new Date().toISOString()
+      };
+      const key = `${req.method}:${req.path}:${payload.statusCode}`;
+      if (canSendWebhook(key)) {
+        const headers = {};
+        const secret = process.env.ERROR_WEBHOOK_SECRET || '';
+        if (secret) {
+          const signature = crypto.createHmac('sha256', secret).update(JSON.stringify(payload)).digest('hex');
+          headers['X-Signature'] = signature;
+        }
+        axios.post(url, payload, { headers }).catch(() => {});
+      }
+    }
+  } catch {}
 
   // Verifica se é um AppError (erro conhecido)
   if (err instanceof AppError) {
@@ -52,7 +90,13 @@ export const errorHandler = (err, req, res, next) => {
     });
   }
 
-  // Erro genérico
+  // Erro genérico - reporta ao Sentry apenas se DSN válido
+  try {
+    const dsn = process.env.SENTRY_DSN;
+    if (dsn && typeof dsn === 'string' && dsn.includes('sentry.io')) {
+      Sentry.captureException(err);
+    }
+  } catch {}
   res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
     success: false,
     error: {

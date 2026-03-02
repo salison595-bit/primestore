@@ -14,6 +14,8 @@ const requiredEnvVars = [
 const optionalEnvVars = [
   'PORT',
   'MERCADO_PAGO_WEBHOOK_SECRET',
+  'STRIPE_SECRET_KEY',
+  'STRIPE_WEBHOOK_SECRET',
   'AWS_ACCESS_KEY_ID',
   'AWS_SECRET_ACCESS_KEY',
   'AWS_S3_BUCKET',
@@ -78,6 +80,10 @@ export const config = {
   
   // Redis (para cache e sessions)
   REDIS_URL: process.env.REDIS_URL,
+  
+  // Stripe
+  STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+  STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
   
   // Features
   MAINTENANCE_MODE: process.env.MAINTENANCE_MODE === 'true',

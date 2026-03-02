@@ -7,6 +7,7 @@ import prisma from '../config/database.js';
 import JWTUtil from '../utils/jwt.js';
 import PasswordUtil from '../utils/password.js';
 import { createLogger } from '../utils/logger.js';
+import { createClient } from 'redis';
 import {
   AuthenticationError,
   ValidationError,
@@ -37,6 +38,12 @@ export class AuthService {
 
     if (existingUser) {
       throw new AlreadyExistsError('Usuário', 'Este email já está registrado');
+    }
+
+    // Valida força da senha
+    const validation = PasswordUtil.validatePasswordStrength(password);
+    if (!validation.valid) {
+      throw new ValidationError('Senha fraca', validation.errors);
     }
 
     // Hash da senha
@@ -78,14 +85,24 @@ export class AuthService {
 
   /**
    * Faz login de um usuário
-   * @param {Object} data - { email, password }
+   * @param {Object} data - { email, password, ip }
    * @returns {Promise<Object>} - { user, accessToken, refreshToken }
    */
   static async login(data) {
-    const { email, password } = data;
+    const { email, password, ip } = data;
 
     if (!email || !password) {
       throw new ValidationError('Email e senha são obrigatórios');
+    }
+
+    // Proteção de brute-force: lockout por IP+email
+    const MAX_ATTEMPTS = parseInt(process.env.LOGIN_MAX_ATTEMPTS || '5', 10);
+    const BLOCK_MINUTES = parseInt(process.env.LOGIN_BLOCK_MINUTES || '15', 10);
+    const scopeKey = `${email}|${ip || 'unknown'}`;
+    const blocked = await AuthService.isBlocked(scopeKey);
+    if (blocked) {
+      logger.warn('Login bloqueado por múltiplas tentativas', { email, ip });
+      throw new AuthenticationError(`Muitas tentativas. Tente novamente em ${BLOCK_MINUTES} minutos`);
     }
 
     // Busca usuário
@@ -109,8 +126,12 @@ export class AuthService {
 
     if (!passwordValid) {
       logger.warn('Tentativa de login com senha incorreta', { email });
+      await AuthService.registerFailedAttempt(scopeKey, MAX_ATTEMPTS, BLOCK_MINUTES);
       throw new AuthenticationError('Email ou senha inválidos');
     }
+
+    // Sucesso: limpar contador de falhas
+    await AuthService.clearFailedAttempts(scopeKey);
 
     // Atualiza último login
     await prisma.user.update({
@@ -328,6 +349,80 @@ export class AuthService {
     // TODO: Implementar token blacklist se necessário
     return { message: 'Logout realizado com sucesso' };
   }
+
+  // ===== Brute-force protection helpers (Redis opcional) =====
 }
+
+// Estado em memória
+const failedLogins = new Map();
+let redisClient = null;
+const redisUrl = process.env.REDIS_URL;
+if (redisUrl) {
+  try {
+    redisClient = createClient({ url: redisUrl });
+    redisClient.on('error', (err) => logger.warn('Redis Auth erro', { err: String(err) }));
+  } catch {
+    redisClient = null;
+  }
+}
+
+async function getRedisJson(key) {
+  if (!redisClient) return null;
+  try {
+    if (!redisClient.isOpen) await redisClient.connect();
+    const val = await redisClient.get(`auth:login:${key}`);
+    return val ? JSON.parse(val) : null;
+  } catch {
+    return null;
+  }
+}
+
+async function setRedisJson(key, obj, ttlSeconds) {
+  if (!redisClient) return;
+  try {
+    if (!redisClient.isOpen) await redisClient.connect();
+    const str = JSON.stringify(obj);
+    if (ttlSeconds > 0) {
+      await redisClient.setEx(`auth:login:${key}`, ttlSeconds, str);
+    } else {
+      await redisClient.set(`auth:login:${key}`, str);
+    }
+  } catch {}
+}
+
+async function delRedisKey(key) {
+  if (!redisClient) return;
+  try {
+    if (!redisClient.isOpen) await redisClient.connect();
+    await redisClient.del(`auth:login:${key}`);
+  } catch {}
+}
+
+AuthService.isBlocked = async (key) => {
+  const now = Date.now();
+  const mem = failedLogins.get(key);
+  if (mem && mem.blockedUntil && mem.blockedUntil > now) return true;
+  const r = await getRedisJson(key);
+  if (r && r.blockedUntil && r.blockedUntil > now) return true;
+  return false;
+};
+
+AuthService.registerFailedAttempt = async (key, maxAttempts, blockMinutes) => {
+  const now = Date.now();
+  const data = failedLogins.get(key) || { count: 0, lastAttempt: 0, blockedUntil: 0 };
+  data.count += 1;
+  data.lastAttempt = now;
+  if (data.count >= maxAttempts) {
+    data.blockedUntil = now + blockMinutes * 60 * 1000;
+  }
+  failedLogins.set(key, data);
+  const ttlSec = data.blockedUntil > now ? Math.ceil((data.blockedUntil - now) / 1000) : blockMinutes * 60;
+  await setRedisJson(key, data, ttlSec);
+};
+
+AuthService.clearFailedAttempts = async (key) => {
+  failedLogins.delete(key);
+  await delRedisKey(key);
+};
 
 export default AuthService;

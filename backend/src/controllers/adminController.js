@@ -1,4 +1,5 @@
 import adminService from '../services/adminService.js';
+import { invalidateCache, invalidateCacheRedis } from '../middlewares/cache.js';
 import { logger } from '../utils/logger.js';
 import formatters from '../utils/formatters.js';
 
@@ -66,6 +67,14 @@ class AdminController {
       res.json(
         formatters.successResponse(product, 'Produto atualizado com sucesso')
       );
+      try {
+        invalidateCache('/api/products');
+        invalidateCache('/products');
+        invalidateCache(`/api/products/${id}`);
+        await invalidateCacheRedis('/api/products');
+        await invalidateCacheRedis('/products');
+        await invalidateCacheRedis(`/api/products/${id}`);
+      } catch {}
     } catch (error) {
       logger.error('Erro ao atualizar produto', error);
       next(error);
@@ -82,6 +91,14 @@ class AdminController {
       const result = await adminService.deleteProduct(id);
 
       res.json(formatters.successResponse(result, result.message));
+      try {
+        invalidateCache('/api/products');
+        invalidateCache('/products');
+        invalidateCache(`/api/products/${id}`);
+        await invalidateCacheRedis('/api/products');
+        await invalidateCacheRedis('/products');
+        await invalidateCacheRedis(`/api/products/${id}`);
+      } catch {}
     } catch (error) {
       logger.error('Erro ao deletar produto', error);
       next(error);

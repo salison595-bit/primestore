@@ -1,11 +1,17 @@
 import "./globals.css";
-import { Inter } from "next/font/google";
+import { Inter, Manrope } from "next/font/google";
 import { CombinedProviders } from "../components/Providers";
 
 const inter = Inter({ 
   subsets: ["latin"],
   display: 'swap',
   variable: '--font-inter',
+});
+
+const manrope = Manrope({
+  subsets: ["latin"],
+  display: 'swap',
+  variable: '--font-manrope',
 });
 
 export const metadata = {
@@ -73,7 +79,7 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="pt-BR" className={inter.variable}>
+    <html lang="pt-BR" className={`${inter.variable} ${manrope.variable}`}>
       <head>
         {/* DNS Prefetch */}
         <link rel="dns-prefetch" href="https://api.primestore.com" />
@@ -90,8 +96,10 @@ export default function RootLayout({ children }) {
         {/* Security headers */}
         <meta name="referrer" content="strict-origin-when-cross-origin" />
         <meta name="color-scheme" content="dark" />
+        {/* Material Symbols */}
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
       </head>
-      <body className={`${inter.className} bg-black text-white`}>
+      <body className="font-sans bg-background-dark text-white/90 selection:bg-primary selection:text-black">
         <CombinedProviders>
           {children}
         </CombinedProviders>

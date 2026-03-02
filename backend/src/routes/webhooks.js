@@ -41,6 +41,7 @@ router.post(
  */
 router.post(
   '/stripe',
+  express.raw({ type: 'application/json' }),
   WebhookController.handleStripeWebhook.bind(WebhookController)
 );
 

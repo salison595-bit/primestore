@@ -164,6 +164,14 @@ export const IMAGES = {
   THUMBNAIL_HEIGHT: 300
 };
 
+// CACHE
+export const CACHE_TTLS = {
+  default: 300,
+  products: 600,
+  categories: 1800,
+  dashboard: 60
+};
+
 export default {
   USER_ROLES,
   ADDRESS_TYPES,
@@ -178,5 +186,6 @@ export default {
   HTTP_STATUS,
   ERROR_CODES,
   FEATURES,
-  IMAGES
+  IMAGES,
+  CACHE_TTLS
 };

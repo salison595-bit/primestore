@@ -5,11 +5,13 @@
  */
 
 import crypto from 'crypto';
+import axios from 'axios';
 import PaymentService from '../services/paymentService.js';
 import emailService from '../services/emailService.js';
 import { logger } from '../utils/logger.js';
 import { AppError } from '../utils/errors.js';
 import prisma from '../config/database.js';
+import Stripe from 'stripe';
 
 export class WebhookController {
   /**
@@ -69,7 +71,7 @@ export class WebhookController {
           externalId: id,
           provider: 'MERCADO_PAGO',
           type,
-          payload: data,
+          payload: JSON.stringify(data || {}),
           status: 'PROCESSING',
         },
       });
@@ -101,7 +103,7 @@ export class WebhookController {
         data: {
           status: 'COMPLETED',
           processedAt: new Date(),
-          result,
+          result: JSON.stringify(result || {}),
         },
       });
 
@@ -147,8 +149,22 @@ export class WebhookController {
     logger.info('💳 Processando pagamento Mercado Pago', { paymentId });
 
     try {
-      // Buscar detalhes do pagamento (chamaria API do Mercado Pago)
-      // For now, vamos processar com o que temos
+      // Buscar detalhes do pagamento via API do Mercado Pago (se disponível)
+      let mpStatus = null;
+      if (process.env.MP_ACCESS_TOKEN) {
+        try {
+          const resp = await axios.get(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+            headers: { Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}` }
+          });
+          mpStatus = String(resp.data?.status || '').toLowerCase(); // approved, pending, in_process, rejected, refunded, cancelled
+          logger.info('Status Mercado Pago obtido', { paymentId, status: mpStatus });
+        } catch (err) {
+          logger.warn('Falha ao obter status do Mercado Pago', { paymentId, err: String(err?.message || err) });
+        }
+      } else if (typeof data?.status === 'string') {
+        mpStatus = String(data.status).toLowerCase();
+      }
+
       const payment = await prisma.payment.findUnique({
         where: { transactionId: paymentId.toString() },
         include: { order: true },
@@ -159,11 +175,24 @@ export class WebhookController {
         return { handled: false, reason: 'payment_not_found' };
       }
 
-      // Atualizar status baseado na situação do pagamento
-      // Isso é simplificado - em produção, você buscaria dados da API do MP
+      // Mapear para status interno
+      const mapStatus = (s) => {
+        switch (s) {
+          case 'approved': return 'APPROVED';
+          case 'rejected': return 'DECLINED';
+          case 'pending': return 'PENDING';
+          case 'in_process': return 'PROCESSING';
+          case 'refunded': return 'REFUNDED';
+          case 'cancelled': return 'CANCELLED';
+          default: return 'APPROVED';
+        }
+      };
+      const finalStatus = mapStatus(mpStatus);
       const updates = {
-        status: 'APPROVED', // Assume aprovado se recebemos webhook
+        status: finalStatus,
         updatedAt: new Date(),
+        paidAt: finalStatus === 'APPROVED' ? new Date() : payment.paidAt,
+        failedAt: finalStatus === 'DECLINED' ? new Date() : payment.failedAt
       };
 
       const updatedPayment = await prisma.payment.update({
@@ -176,8 +205,8 @@ export class WebhookController {
         await prisma.order.update({
           where: { id: payment.orderId },
           data: {
-            paymentStatus: 'APPROVED',
-            status: 'CONFIRMED', // Confirma pedido quando pagamento aprovado
+            paymentStatus: finalStatus,
+            status: finalStatus === 'APPROVED' ? 'CONFIRMED' : payment.order.status
           },
         });
 
@@ -185,8 +214,10 @@ export class WebhookController {
         await prisma.orderStatusHistory.create({
           data: {
             orderId: payment.orderId,
-            status: 'CONFIRMED',
-            notes: 'Pagamento aprovado via Mercado Pago',
+            status: finalStatus === 'APPROVED' ? 'CONFIRMED' : 'PENDING',
+            notes: finalStatus === 'APPROVED' 
+              ? 'Pagamento aprovado via Mercado Pago'
+              : (finalStatus === 'DECLINED' ? 'Pagamento recusado via Mercado Pago' : `Status ${finalStatus} via Mercado Pago`)
           },
         });
 
@@ -324,28 +355,218 @@ export class WebhookController {
    */
   static async handleStripeWebhook(req, res, next) {
     try {
-      const { type, data } = req.body;
+      const sig = req.headers['stripe-signature'];
+      const secret = process.env.STRIPE_WEBHOOK_SECRET || '';
+      let event = null;
+
+      if (secret && sig && Buffer.isBuffer(req.body)) {
+        try {
+          event = Stripe.webhooks.constructEvent(req.body, sig, secret);
+        } catch (err) {
+          logger.warn('❌ Assinatura Stripe inválida', { error: err.message });
+          return res.status(400).json({ received: true, error: 'invalid_signature' });
+        }
+      } else {
+        logger.warn('⚠️ STRIPE_WEBHOOK_SECRET não configurado ou body não é raw; aceitando evento em modo desenvolvimento');
+        const body = typeof req.body === 'object' ? req.body : {};
+        event = {
+          id: body.id || `stripe-${Date.now()}`,
+          type: body.type || 'unknown',
+          data: { object: body.data || {} }
+        };
+      }
+
+      const { type } = event;
 
       logger.info('📨 Webhook Stripe recebido', { type });
+
+      // Idempotência: se já existir, retorna cached
+      const externalId = event.id || `stripe-${Date.now()}`;
+      const existing = await prisma.webhookEvent.findUnique({ where: { externalId } }).catch(() => null);
+      if (existing) {
+        logger.info('⏭️  Webhook Stripe já processado anteriormente', { externalId });
+        return res.json({ received: true, cached: true });
+      }
 
       // Registrar evento
       const webhookEvent = await prisma.webhookEvent.create({
         data: {
-          externalId: req.body.id || `stripe-${Date.now()}`,
+          externalId,
           provider: 'STRIPE',
           type,
-          payload: data,
-          status: 'COMPLETED',
+          payload: JSON.stringify(event.data?.object || {}),
+          status: 'PROCESSING',
         },
       });
 
-      // TODO: Implementar processamento específico do Stripe
-      logger.warn('⚠️  Processamento de Stripe webhook não implementado');
+      // Processamento básico de eventos comuns
+      let result = { handled: false };
+      switch (type) {
+        case 'checkout.session.completed':
+          result = await this.processStripeCheckoutSession(event.data?.object || {});
+          break;
+        case 'payment_intent.payment_failed':
+          result = await this.processStripePaymentIntentFailed(event.data?.object || {});
+          break;
+        case 'payment_intent.succeeded':
+          logger.info('✅ Stripe payment_intent.succeeded', { id: event.data?.object?.id });
+          result = { handled: true, intentId: event.data?.object?.id };
+          break;
+        case 'charge.failed':
+          logger.warn('⚠️ Stripe charge.failed', { id: event.data?.object?.id });
+          result = { handled: true, chargeId: event.data?.object?.id, failed: true };
+          break;
+        default:
+          logger.warn('⚠️ Evento Stripe não tratado', { type });
+          result = { handled: false, type };
+      }
+
+      // Atualiza evento para COMPLETED
+      await prisma.webhookEvent.update({
+        where: { id: webhookEvent.id },
+        data: { status: 'COMPLETED', processedAt: new Date(), result: JSON.stringify(result || {}) }
+      });
 
       res.json({ received: true, eventId: webhookEvent.id });
     } catch (error) {
       logger.error('Erro ao processar webhook Stripe', error);
       res.status(200).json({ received: true, error: error.message });
+    }
+  }
+
+  /**
+   * Processa checkout.session.completed
+   * Atualiza pagamento e pedido, envia emails
+   */
+  static async processStripeCheckoutSession(session) {
+    try {
+      const orderId = session?.metadata?.orderId || session?.client_reference_id || null;
+      const paymentIntentId = session?.payment_intent || null;
+      if (!orderId) {
+        logger.warn('Stripe session sem orderId', { sessionId: session?.id });
+        return { handled: false, reason: 'missing_order_id' };
+      }
+
+      const order = await prisma.order.findUnique({
+        where: { id: String(orderId) },
+        include: { payments: true }
+      });
+      if (!order) {
+        logger.warn('Pedido não encontrado para Stripe session', { orderId });
+        return { handled: false, reason: 'order_not_found', orderId };
+      }
+
+      // Seleciona pagamento mais recente do pedido
+      const payment = order.payments?.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0] || null;
+      if (payment) {
+        await prisma.payment.update({
+          where: { id: payment.id },
+          data: {
+            status: 'APPROVED',
+            paidAt: new Date(),
+            transactionId: payment.transactionId || paymentIntentId || session?.id || payment.transactionId,
+            receiptUrl: session?.invoice_pdf || payment.receiptUrl
+          }
+        });
+      }
+
+      // Atualiza pedido
+      await prisma.order.update({
+        where: { id: order.id },
+        data: {
+          paymentStatus: 'APPROVED',
+          status: 'CONFIRMED'
+        }
+      });
+
+      await prisma.orderStatusHistory.create({
+        data: {
+          orderId: order.id,
+          status: 'CONFIRMED',
+          notes: 'Pagamento aprovado via Stripe (checkout.session.completed)'
+        }
+      });
+
+      try {
+        const customer = await prisma.user.findUnique({ where: { id: order.userId } });
+        if (customer?.email) {
+          const orderData = {
+            id: order.id,
+            total: order.total,
+            paymentMethod: 'Stripe',
+            items: [], // simplificado; pode popular se houver relação
+            createdAt: order.createdAt
+          };
+          await emailService.sendOrderConfirmation(orderData, { name: customer.name, email: customer.email });
+          await emailService.sendAdminNotification(
+            { id: order.id, customerName: customer.name, customerEmail: customer.email, total: order.total, createdAt: order.createdAt },
+            'payment-approved'
+          );
+        }
+      } catch {}
+
+      logger.info('✅ Pedido confirmado via Stripe', { orderId, paymentIntentId });
+      return { handled: true, orderId, paymentIntentId, action: 'payment_approved' };
+    } catch (err) {
+      logger.error('Erro ao processar checkout.session.completed', err);
+      throw err;
+    }
+  }
+
+  /**
+   * Processa payment_intent.payment_failed
+   * Atualiza pagamento/pedido e registra histórico
+   */
+  static async processStripePaymentIntentFailed(intent) {
+    try {
+      const orderId = intent?.metadata?.orderId || null;
+      const intentId = intent?.id || null;
+      if (!orderId) {
+        logger.warn('Payment intent sem orderId', { intentId });
+        return { handled: false, reason: 'missing_order_id' };
+      }
+
+      const order = await prisma.order.findUnique({
+        where: { id: String(orderId) },
+        include: { payments: true }
+      });
+      if (!order) {
+        logger.warn('Pedido não encontrado para payment intent', { orderId });
+        return { handled: false, reason: 'order_not_found', orderId };
+      }
+
+      const payment = order.payments?.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0] || null;
+      if (payment) {
+        await prisma.payment.update({
+          where: { id: payment.id },
+          data: {
+            status: 'DECLINED',
+            failedAt: new Date(),
+            transactionId: payment.transactionId || intentId || payment.transactionId
+          }
+        });
+      }
+
+      await prisma.order.update({
+        where: { id: order.id },
+        data: {
+          paymentStatus: 'DECLINED'
+        }
+      });
+
+      await prisma.orderStatusHistory.create({
+        data: {
+          orderId: order.id,
+          status: 'PENDING',
+          notes: 'Pagamento falhou via Stripe (payment_intent.payment_failed)'
+        }
+      });
+
+      logger.warn('⚠️ Pagamento Stripe falhou', { orderId, intentId });
+      return { handled: true, orderId, intentId, action: 'payment_declined' };
+    } catch (err) {
+      logger.error('Erro ao processar payment_intent.payment_failed', err);
+      throw err;
     }
   }
 
