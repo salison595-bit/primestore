@@ -15,7 +15,6 @@ import productRoutes from './products.js';
 import orderRoutes from './orders.js';
 import wishlistRoutes from './wishlist.js';
 import assetsRoutes from './assets.js';
-import notificationRoutes from './notifications.js';
 import { cacheManager, getRedisStatus, getCacheMetrics, clearAllCache, invalidateCache } from '../middlewares/cache.js';
 import { rateLimiter } from '../middlewares/rateLimiter.js';
 import { optionalAuth } from '../middlewares/auth.js';
@@ -105,7 +104,6 @@ router.post('/cache/prewarm', cacheAdminGuard, async (req, res) => {
  * Assets
  */
 router.use('/assets', assetsRoutes);
-router.use('/notifications', notificationRoutes);
 
 /**
  * Registra rotas de autenticação

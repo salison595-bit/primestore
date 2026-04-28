@@ -39,7 +39,6 @@ import axios from 'axios';
 
 // Imports de rotas
 import apiRoutes from './src/routes/index.js';
-import { initCronJobs } from './src/services/cronService.js';
 
 // Métricas de rotas
 const routeMetrics = {
@@ -472,9 +471,6 @@ const startServer = async () => {
     // Testa conexão com banco de dados
     await prisma.$queryRaw`SELECT 1`;
     logger.info('✅ Conexão com banco de dados estabelecida');
-
-    // Inicializa Cron Jobs
-    initCronJobs();
 
     // Inicia servidor
     app.listen(PORT, async () => {

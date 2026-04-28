@@ -1,5 +1,8 @@
 'use client';
 
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+
 export default function ServicesSection() {
   const services = [
     {
@@ -10,14 +13,7 @@ export default function ServicesSection() {
       cta: "SOLICITAR ORÇAMENTO"
     },
     {
-      title: "Pintura Personalizada",
-      description: "Acabamentos exclusivos em pintura eletrostática ou líquida. Cores sob medida.",
-      image: "https://images.unsplash.com/photo-1599256621730-535171e28e50?q=80&w=2071&auto=format&fit=crop",
-      icon: "format_paint",
-      cta: "AGENDAR CONSULTA"
-    },
-    {
-      title: "Reparos Estéticos",
+      title: "Polimento e Cristalização",
       description: "Tratamento de imperfeições e diamantagem para acabamento showroom.",
       image: "https://images.unsplash.com/photo-1562141989-c5c79ac8f576?q=80&w=2070&auto=format&fit=crop",
       icon: "precision_manufacturing",
@@ -27,7 +23,6 @@ export default function ServicesSection() {
 
   return (
     <section className="px-6 md:px-12 lg:px-16 py-24 bg-[#050505] relative overflow-hidden font-manrope" id="servicos">
-      {/* Background Decoration */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[20%] left-[-10%] w-[40%] h-[40%] bg-[#d4af37]/5 rounded-full blur-[120px]" />
         <div className="absolute bottom-[20%] right-[-10%] w-[40%] h-[40%] bg-[#d4af37]/5 rounded-full blur-[120px]" />
@@ -45,7 +40,7 @@ export default function ServicesSection() {
         </p>
       </div>
       
-      <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
         {services.map((service, idx) => (
           <div key={idx} className="group bg-white/5 backdrop-blur-xl border border-white/10 rounded-[32px] overflow-hidden flex flex-col transition-all duration-500 hover:border-[#d4af37]/30 hover:bg-white/[0.08]">
             <div className="aspect-[16/10] relative overflow-hidden bg-[#0a0a0a]">

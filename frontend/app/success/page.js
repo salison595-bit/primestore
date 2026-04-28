@@ -27,6 +27,12 @@ function SuccessContent() {
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      setNotificationPermission(Notification.permission);
+    }
+  }, []);
+
+  useEffect(() => {
     const fetchOrder = async () => {
       if (!orderId) {
         setLoading(false);
@@ -46,6 +52,17 @@ function SuccessContent() {
     };
     fetchOrder();
   }, [orderId]);
+
+  const handleNotificationPermission = async () => {
+    try {
+      if (typeof window !== 'undefined' && 'Notification' in window) {
+        const permission = await Notification.requestPermission();
+        setNotificationPermission(permission);
+      }
+    } catch (e) {
+      // noop
+    }
+  };
 
   const totalBRL = (v) => (typeof v === 'number' ? v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : v || '—');
   const formatDate = (d) => {
@@ -108,22 +125,6 @@ function SuccessContent() {
     if (s.includes('USPS')) return `https://tools.usps.com/go/TrackConfirmAction?tLabels=${encodeURIComponent(c)}`;
     return `https://track.aftership.com/${encodeURIComponent(c)}`;
   };
-  const CarrierLogo = ({ carrier }) => {
-    const s = String(carrier || '').toUpperCase();
-    if (s.includes('CORREIOS')) return (
-      <div className="w-12 h-6 bg-yellow-400 rounded flex items-center justify-center text-[10px] font-bold text-blue-800">CORREIOS</div>
-    );
-    if (s.includes('JADLOG')) return (
-      <div className="w-12 h-6 bg-red-600 rounded flex items-center justify-center text-[10px] font-bold text-white">JADLOG</div>
-    );
-    if (s.includes('LOGGI')) return (
-      <div className="w-12 h-6 bg-blue-500 rounded flex items-center justify-center text-[10px] font-bold text-white italic">loggi</div>
-    );
-    if (s.includes('UPS')) return (
-      <div className="w-12 h-6 bg-[#351c15] rounded flex items-center justify-center text-[10px] font-bold text-[#ffb500]">UPS</div>
-    );
-    return null;
-  };
   const shippingStatusLabel = (status) => {
     const s = String(status || '').toUpperCase();
     if (s === 'SHIPPED') return 'Saiu para entrega';
@@ -140,6 +141,7 @@ function SuccessContent() {
     if (s === 'CONFIRMED') return 'bg-neutral-800 border-neutral-700 text-gray-300';
     return 'bg-neutral-800 border-neutral-700 text-gray-300';
   };
+
   useEffect(() => {
     const loadItemImages = async () => {
       try {
@@ -183,9 +185,6 @@ function SuccessContent() {
   }, [order]);
 
   const [recommended, setRecommended] = useState([]);
-  const Skeleton = ({ className }) => (
-    <div className={`bg-neutral-800 animate-pulse rounded ${className}`} />
-  );
   useEffect(() => {
     const loadRecommended = async () => {
       try {
@@ -206,47 +205,6 @@ function SuccessContent() {
     };
     loadRecommended();
   }, []);
-  useEffect(() => {
-    if ('Notification' in window) {
-      setNotificationPermission(Notification.permission);
-    }
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(err => {
-        console.error('Service Worker registration failed:', err);
-      });
-    }
-  }, []);
-
-  const handleNotificationPermission = async () => {
-    if (!('Notification' in window) || !('serviceWorker' in navigator)) {
-      alert('Este navegador não suporta notificações.');
-      return;
-    }
-
-    const permission = await Notification.requestPermission();
-    setNotificationPermission(permission);
-
-    if (permission === 'granted') {
-      try {
-        const sw = await navigator.serviceWorker.ready;
-        const subscription = await sw.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-        });
-
-        await api.post('/notifications/subscribe', {
-          orderId,
-          endpoint: subscription.endpoint,
-          keys: {
-            p256dh: subscription.toJSON().keys.p256dh,
-            auth: subscription.toJSON().keys.auth,
-          },
-        });
-      } catch (error) {
-        console.error('Falha ao inscrever para notificações:', error);
-      }
-    }
-  };
 
   return (
     <div className="bg-[#050505] min-h-screen flex flex-col">
@@ -281,20 +239,20 @@ function SuccessContent() {
               {loading ? (
                 <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 space-y-6">
                   <div className="space-y-3">
-                    <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-8 w-64" />
+                    <div className="h-4 w-32 bg-white/10 rounded animate-pulse" />
+                    <div className="h-8 w-64 bg-white/10 rounded animate-pulse" />
                   </div>
                   <div className="space-y-4 pt-6 border-t border-white/5">
                     {[1, 2, 3].map((i) => (
                       <div key={i} className="flex justify-between gap-4">
                         <div className="flex gap-3">
-                          <Skeleton className="h-12 w-12 rounded-lg" />
+                          <div className="h-12 w-12 bg-white/10 rounded-lg animate-pulse" />
                           <div className="space-y-2">
-                            <Skeleton className="h-4 w-32" />
-                            <Skeleton className="h-3 w-20" />
+                            <div className="h-4 w-32 bg-white/10 rounded animate-pulse" />
+                            <div className="h-3 w-20 bg-white/10 rounded animate-pulse" />
                           </div>
                         </div>
-                        <Skeleton className="h-4 w-20" />
+                        <div className="h-4 w-20 bg-white/10 rounded animate-pulse" />
                       </div>
                     ))}
                   </div>
@@ -633,14 +591,6 @@ function SuccessContent() {
           .animate-pulse-slow {
             animation: pulse-slow 3s ease-in-out infinite;
           }
-        `}</style>
-      </main>
-
-      <Footer />
-      <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
-    </div>
-  )
-        <style>{`
           @keyframes pulseSoft {
             0%, 100% { opacity: 0.9; filter: brightness(1.1); }
             50% { opacity: 1; filter: brightness(1.25); }
@@ -649,7 +599,10 @@ function SuccessContent() {
             animation: pulseSoft 1.5s ease-in-out infinite;
           }
         `}</style>
-      </div>
+      </main>
+
+      <Footer />
+      <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </div>
   )
 }

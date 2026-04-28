@@ -1,31 +1,41 @@
 'use client';
 
-import Image from 'next/image';
-import { useCart } from '@/hooks/useCart';
-import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
+import { useState } from 'react';
 
-export default function ProductCard({ product }) {
-  const { addItem } = useCart();
+export default function ProductCardPremium({ product }) {
   const [isAdded, setIsAdded] = useState(false);
 
-  const handleAddToCart = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    addItem({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      quantity: 1,
-      image: product.image,
-    });
-    setIsAdded(true);
-    setTimeout(() => setIsAdded(false), 2000);
+  const handleAddToCart = () => {
+    try {
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+      const existingItem = cart.find(item => item.id === product.id);
+      
+      if (existingItem) {
+        existingItem.quantity += 1;
+      } else {
+        cart.push({
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          image: product.image,
+          quantity: 1
+        });
+      }
+      
+      localStorage.setItem('cart', JSON.stringify(cart));
+      window.dispatchEvent(new Event('cartUpdated'));
+      setIsAdded(true);
+      setTimeout(() => setIsAdded(false), 2000);
+    } catch (error) {
+      console.error('Erro ao adicionar ao carrinho:', error);
+    }
   };
 
   const formattedPrice = new Intl.NumberFormat('pt-BR', {
     style: 'currency',
-    currency: 'BRL',
+    currency: 'BRL'
   }).format(product.price);
 
   return (
@@ -39,6 +49,8 @@ export default function ProductCard({ product }) {
             fill
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 16vw"
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+            priority={false}
+            loading="lazy"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-white/5">
@@ -57,7 +69,7 @@ export default function ProductCard({ product }) {
             </h3>
           </Link>
           <p className="text-[#d4af37] text-lg font-semibold tracking-tighter">
-            {product.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+            {formattedPrice}
           </p>
         </div>
 
@@ -69,6 +81,7 @@ export default function ProductCard({ product }) {
               ? 'bg-green-500 text-white' 
               : 'bg-white/5 hover:bg-[#d4af37] hover:text-[#050505] text-gray-400'
           }`}
+          aria-label={isAdded ? 'Adicionado ao carrinho' : `Adicionar ${product.name} ao carrinho`}
         >
           {isAdded ? (
             <>
