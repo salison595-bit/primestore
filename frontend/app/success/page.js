@@ -60,7 +60,6 @@ function SuccessContent() {
         setNotificationPermission(permission);
       }
     } catch (e) {
-      // noop
     }
   };
 
@@ -178,7 +177,6 @@ function SuccessContent() {
         });
         setItemImages(map);
       } catch (e) {
-        // noop
       }
     };
     loadItemImages();
@@ -211,14 +209,12 @@ function SuccessContent() {
       <Header onCartClick={() => setIsCartOpen(true)} />
       
       <main className="flex-1 relative text-white pt-12 pb-20 px-4 font-manrope overflow-hidden">
-        {/* Background Decorative Elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#d4af37]/5 rounded-full blur-[120px]" />
           <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#d4af37]/5 rounded-full blur-[120px]" />
         </div>
 
         <div className="relative z-10 max-w-4xl mx-auto">
-          {/* Header Section */}
           <div className="text-center mb-12">
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[#d4af37]/10 border border-[#d4af37]/20 mb-6 animate-pulse-slow">
               <svg className="w-10 h-10 text-[#d4af37]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -234,7 +230,6 @@ function SuccessContent() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Main Content - Order Details */}
             <div className="lg:col-span-2 space-y-6">
               {loading ? (
                 <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 space-y-6">
@@ -269,7 +264,6 @@ function SuccessContent() {
                 </div>
               ) : order && (
                 <>
-                  {/* Status Card */}
                   <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                       <div>
@@ -283,7 +277,6 @@ function SuccessContent() {
                       </div>
                     </div>
 
-                    {/* Visual Timeline */}
                     <div className="relative mt-12 mb-8">
                       <div className="absolute top-1/2 left-0 w-full h-[2px] bg-white/5 -translate-y-1/2" />
                       <div 
@@ -319,7 +312,6 @@ function SuccessContent() {
                       </div>
                     </div>
 
-                    {/* Tracking Info if Shipped */}
                     {!((order.shippingCost || 0) <= 0 && !order.shippingAddress) && order.trackingNumber && (
                       <div className="mt-16 p-6 bg-white/[0.02] border border-white/5 rounded-xl">
                         <div className="flex items-center justify-between mb-4">
@@ -379,7 +371,6 @@ function SuccessContent() {
                     )}
                   </div>
 
-                  {/* Items Card */}
                   <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8">
                     <h3 className="text-sm uppercase tracking-widest text-[#d4af37] mb-6">Resumo dos Itens</h3>
                     <div className="space-y-6">
@@ -431,11 +422,9 @@ function SuccessContent() {
               )}
             </div>
 
-            {/* Sidebar - Actions & Summary */}
             <div className="space-y-6">
               {!loading && order && (
                 <>
-                  {/* Executive Actions */}
                   <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 space-y-4">
                     <h3 className="text-xs uppercase tracking-widest text-[#d4af37] mb-4 text-center">Ações VIP</h3>
                     
@@ -497,7 +486,6 @@ function SuccessContent() {
                     </button>
                   </div>
 
-                  {/* Delivery Address */}
                   {order.shippingAddress && (
                     <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
                       <h3 className="text-xs uppercase tracking-widest text-[#d4af37] mb-4">Entrega</h3>
@@ -511,7 +499,6 @@ function SuccessContent() {
                     </div>
                   )}
 
-                  {/* Payment Summary */}
                   <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
                     <h3 className="text-xs uppercase tracking-widest text-[#d4af37] mb-4">Pagamento</h3>
                     <div className="text-sm text-gray-300">
@@ -551,7 +538,6 @@ function SuccessContent() {
             </div>
           </div>
 
-          {/* Recommended Items */}
           {recommended.length > 0 && (
             <div className="mt-20">
               <h3 className="text-xl font-light tracking-tight mb-8 text-center uppercase">EXCLUSIVOS PARA <span className="text-[#d4af37] font-medium">VOCÊ</span></h3>
@@ -604,7 +590,7 @@ function SuccessContent() {
       <Footer />
       <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </div>
-  )
+  );
 }
 
 export default function SuccessPage() {

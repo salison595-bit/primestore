@@ -37,7 +37,6 @@ export default function Footer() {
     <footer className="bg-[#050505] pt-24 pb-12 px-6 md:px-12 lg:px-16 border-t border-white/5 font-manrope">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-16 lg:gap-8 mb-20">
-          {/* Brand Section */}
           <div className="lg:col-span-4">
             <Link href="/" className="flex items-center gap-3 mb-8 group">
               <div className="w-10 h-10 rounded-xl bg-[#d4af37]/10 border border-[#d4af37]/20 flex items-center justify-center group-hover:bg-[#d4af37]/20 transition-all duration-500">
@@ -61,7 +60,6 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Navigation Sections */}
           {footerSections.map((section) => (
             <div key={section.title} className="lg:col-span-2">
               <h4 className="text-[10px] font-bold text-white tracking-[0.4em] uppercase mb-8">
@@ -79,7 +77,6 @@ export default function Footer() {
             </div>
           ))}
 
-          {/* Newsletter Section */}
           <div className="lg:col-span-4">
             <h4 className="text-[10px] font-bold text-white tracking-[0.4em] uppercase mb-8">
               Newsletter VIP
@@ -100,7 +97,6 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Bottom Section */}
         <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
           <p className="text-[9px] text-gray-600 tracking-[0.3em] uppercase">
             © {currentYear} <span className="text-gray-400">Prime Store Luxury</span>. Todos os direitos reservados.
